@@ -3,25 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Indicadores de Saúde</title>
+    <title>Busca Ativa de Saúde</title>
+    <!-- Carrega o arquivo de estilos -->
     <link rel="stylesheet" href="styles.css">
+    <!-- Biblioteca XLSX para exportação de dados em Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
+    <!-- Cabeçalho com título e botões de ação -->
     <header>
-        <h1>Dashboard de Indicadores de Saúde</h1>
+        <h1>Busca Ativa de Saúde</h1>
         <div class="actions">
             <button id="addDataBtn">Adicionar Funcionário</button>
             <button id="exportBtn">Exportar Dados</button>
         </div>
     </header>
     
+    <!-- Conteúdo principal -->
     <main>
+        <!-- Abas para alternar entre Dashboard e Dados Detalhados -->
         <div class="tabs">
             <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
             <button class="tab-btn" data-tab="detailed-data">Dados Detalhados</button>
         </div>
         
+        <!-- Seção de filtros -->
         <section class="filters-section">
             <div class="filter-container">
                 <label for="employeeFilter">Funcionário:</label>
@@ -38,7 +44,9 @@
             </div>
         </section>
         
+        <!-- Conteúdo da aba Dashboard -->
         <div class="tab-content active" id="dashboard-content">
+            <!-- Cartões de resumo -->
             <section class="summary-cards">
                 <div class="card" id="totalEmployees">
                     <h3>Total de Funcionários</h3>
@@ -54,7 +62,9 @@
                 </div>
             </section>
 
+            <!-- Gráficos -->
             <section class="charts-container">
+                <!-- Gráfico de Condições de Saúde -->
                 <div class="chart-wrapper full-width">
                     <h2>Condições de Saúde</h2>
                     <div class="chart-filters">
@@ -85,7 +95,9 @@
                     </div>
                 </div>
                 
+                <!-- Sub-gráficos (IMC e Hábitos) -->
                 <div class="sub-charts-container">
+                    <!-- Gráfico de IMC -->
                     <div class="chart-wrapper">
                         <h2>Distribuição de IMC</h2>
                         <div class="chart-filters">
@@ -109,6 +121,7 @@
                         </div>
                     </div>
                     
+                    <!-- Gráfico de Hábitos -->
                     <div class="chart-wrapper">
                         <h2>Hábitos</h2>
                         <div class="chart-filters">
@@ -132,6 +145,7 @@
             </section>
         </div>
         
+        <!-- Conteúdo da aba Dados Detalhados -->
         <div class="tab-content" id="detailed-data-content">
             <section class="data-table-section">
                 <h2>Dados Detalhados</h2>
@@ -168,6 +182,7 @@
         </div>
     </main>
     
+    <!-- Modal para adicionar/editar funcionário -->
     <div id="dataModal" class="modal">
         <div class="modal-content">
             <span class="close">×</span>
@@ -183,11 +198,11 @@
                 </div>
                 <div class="form-group">
                     <label for="weight">Peso (kg):</label>
-                    <input type="number" id="weight" min="30" max="300" step="0.1" required oninput="calculateIMC()">
+                    <input type="number" id="weight" min="30" max="300" step="0.1" required>
                 </div>
                 <div class="form-group">
                     <label for="height">Altura (m):</label>
-                    <input type="number" id="height" min="1" max="2.5" step="0.01" required oninput="calculateIMC()">
+                    <input type="number" id="height" min="1" max="2.5" step="0.01" required>
                 </div>
                 <div class="form-group">
                     <label for="sector">Setor:</label>
@@ -313,6 +328,7 @@
         </div>
     </div>
     
+    <!-- Modal para confirmação de exclusão -->
     <div id="deleteModal" class="modal">
         <div class="modal-content delete-modal">
             <h2>Confirmar Exclusão</h2>
@@ -324,10 +340,12 @@
         </div>
     </div>
     
+    <!-- Rodapé -->
     <footer>
         <p>© 2025 Dashboard de Indicadores de Saúde</p>
     </footer>
     
+    <!-- Carrega o script principal -->
     <script src="script.js"></script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93dc9a33fddebd60',t:'MTc0NjkxMzMwMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>

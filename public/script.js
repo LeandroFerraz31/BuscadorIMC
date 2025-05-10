@@ -1,11 +1,23 @@
+/**
+ * Configuração da URL base da API, ajustada para ambiente local ou produção.
+ * @constant {string} API_BASE_URL - URL da API (localhost:3000 localmente ou URL do Render em produção).
+ */
 const API_BASE_URL = window.location.hostname.includes('onrender.com') 
     ? window.location.origin 
     : 'http://localhost:3000';
 console.log('API_BASE_URL definido como:', API_BASE_URL);
 
+/**
+ * Dados globais dos funcionários.
+ * @type {Array<Object>} employeesData - Lista completa de funcionários carregada da API.
+ * @type {Array<Object>} filteredData - Lista filtrada para exibição na tabela e gráficos.
+ */
 let employeesData = [];
 let filteredData = [];
 
+/**
+ * Referências aos elementos DOM usados no script.
+ */
 const dataTable = document.getElementById('dataTable');
 const addDataBtn = document.getElementById('addDataBtn');
 const exportBtn = document.getElementById('exportBtn');
@@ -18,6 +30,10 @@ const cancelDeleteBtn = document.getElementById('cancelDelete');
 const employeeFilter = document.getElementById('employeeFilter');
 let currentDeleteId = null;
 
+/**
+ * Carrega os dados dos funcionários da API e atualiza a interface.
+ * @async
+ */
 async function fetchEmployees() {
     try {
         const url = `${API_BASE_URL}/api/employees`;
@@ -38,6 +54,10 @@ async function fetchEmployees() {
     }
 }
 
+/**
+ * Conta indicadores para os gráficos e cartões de resumo.
+ * @returns {Object} Objeto com contagens de condições, hábitos e categorias de IMC.
+ */
 const countIndicators = () => {
     const counts = {
         HAS: 0, DM: 0, Cardíaco: 0, Asmático: 0, CA: 0, Ansiedade: 0, Renal: 0, Depressão: 0, Trombose: 0,
@@ -66,6 +86,9 @@ const countIndicators = () => {
     return counts;
 };
 
+/**
+ * Renderiza a tabela de dados detalhados com os funcionários filtrados.
+ */
 const renderTable = () => {
     console.log('Renderizando tabela com dados:', filteredData);
     const tbody = dataTable.querySelector('tbody');
@@ -118,6 +141,9 @@ const renderTable = () => {
     });
 };
 
+/**
+ * Atualiza os cartões de resumo com totais de funcionários, uso de medicação e PCDs.
+ */
 const renderSummaryCards = () => {
     document.getElementById('totalEmployees').querySelector('.number').textContent = filteredData.length;
     const counts = countIndicators();
@@ -125,6 +151,9 @@ const renderSummaryCards = () => {
     document.getElementById('pcdCount').querySelector('.number').textContent = counts.pcd;
 };
 
+/**
+ * Renderiza o gráfico de condições de saúde com base nos filtros selecionados.
+ */
 const renderHealthConditionsChart = () => {
     const counts = countIndicators();
     const chart = document.getElementById('healthConditionsChart');
@@ -179,6 +208,9 @@ const renderHealthConditionsChart = () => {
     chart.appendChild(barContainer);
 };
 
+/**
+ * Renderiza o gráfico de distribuição de IMC com base nos filtros selecionados.
+ */
 const renderImcChart = () => {
     const counts = countIndicators();
     const chart = document.getElementById('imcChart');
@@ -226,6 +258,9 @@ const renderImcChart = () => {
     chart.appendChild(barContainer);
 };
 
+/**
+ * Renderiza o gráfico de hábitos com base nos filtros selecionados.
+ */
 const renderHabitsChart = () => {
     const counts = countIndicators();
     const chart = document.getElementById('habitsChart');
@@ -270,6 +305,9 @@ const renderHabitsChart = () => {
     chart.appendChild(barContainer);
 };
 
+/**
+ * Renderiza todos os gráficos (Condições de Saúde, IMC, Hábitos).
+ */
 const renderCharts = () => {
     console.log('Renderizando gráficos');
     renderHealthConditionsChart();
@@ -277,6 +315,9 @@ const renderCharts = () => {
     renderHabitsChart();
 };
 
+/**
+ * Popula a lista de sugestões de nomes de funcionários no filtro.
+ */
 const populateEmployeeSuggestions = () => {
     const datalist = document.getElementById('employeeSuggestions');
     datalist.innerHTML = '<option value="all">Todos os Funcionários</option>';
@@ -289,6 +330,9 @@ const populateEmployeeSuggestions = () => {
     });
 };
 
+/**
+ * Popula o filtro de filiais com as unidades disponíveis.
+ */
 const populateBranchFilter = () => {
     const branchFilter = document.getElementById('branchFilter');
     branchFilter.innerHTML = '<option value="all">Todas as Unidades</option>';
@@ -302,6 +346,10 @@ const populateBranchFilter = () => {
     });
 };
 
+/**
+ * Preenche o formulário com os dados de um funcionário para edição.
+ * @param {number} index - Índice do funcionário na lista filteredData.
+ */
 const editEmployee = (index) => {
     console.log('Editando funcionário no índice:', index);
     const employee = filteredData[index];
@@ -341,12 +389,21 @@ const editEmployee = (index) => {
     modal.style.display = 'block';
 };
 
+/**
+ * Exibe o modal de confirmação de exclusão.
+ * @param {number} index - Índice do funcionário na lista filteredData.
+ */
 const showDeleteConfirmation = (index) => {
     console.log('Mostrando confirmação de exclusão para índice:', index);
     currentDeleteId = index;
     deleteModal.style.display = 'block';
 };
 
+/**
+ * Exclui um funcionário da API e atualiza a interface.
+ * @async
+ * @param {number} index - Índice do funcionário na lista filteredData.
+ */
 const deleteEmployee = async (index) => {
     const employee = filteredData[index];
     try {
@@ -363,6 +420,28 @@ const deleteEmployee = async (index) => {
     }
 };
 
+/**
+ * Calcula o IMC automaticamente com base no peso e altura.
+ * Fórmula: IMC = peso (kg) / (altura (m) * altura (m)).
+ * Atualiza o campo imc no formulário.
+ */
+const calculateIMC = () => {
+    const weight = parseFloat(document.getElementById('weight').value);
+    const height = parseFloat(document.getElementById('height').value);
+    const imcField = document.getElementById('imc');
+
+    if (weight > 0 && height > 0) {
+        const imc = (weight / (height * height)).toFixed(1);
+        imcField.value = imc;
+    } else {
+        imcField.value = '';
+    }
+};
+
+/**
+ * Adiciona ou atualiza um funcionário na API.
+ * @async
+ */
 const addNewEmployee = async () => {
     const name = document.getElementById('name').value;
     const age = parseInt(document.getElementById('age').value) || null;
@@ -421,6 +500,9 @@ const addNewEmployee = async () => {
     }
 };
 
+/**
+ * Exporta os dados para um arquivo Excel.
+ */
 const exportData = () => {
     console.log('Exportando dados');
     const counts = countIndicators();
@@ -465,6 +547,9 @@ const exportData = () => {
     XLSX.writeFile(wb, "indicadores_saude.xlsx");
 };
 
+/**
+ * Aplica os filtros de funcionário e filial à tabela e gráficos.
+ */
 const applyFilters = () => {
     console.log('Aplicando filtros');
     const employeeFilterValue = employeeFilter.value.trim();
@@ -488,19 +573,25 @@ const applyFilters = () => {
     renderCharts();
 };
 
-// Função para atualizar automaticamente após inserções do n8n
+/**
+ * Inicia a atualização automática dos dados a cada 30 segundos para refletir inserções via n8n.
+ */
 function startAutoUpdate() {
     setInterval(async () => {
         console.log('Verificando atualizações via n8n...');
         await fetchEmployees();
-    }, 30000); // Atualiza a cada 30 segundos
+    }, 30000);
 }
 
+/**
+ * Inicializa o aplicativo, configurando eventos e carregando dados iniciais.
+ */
 const initApp = () => {
     console.log('Inicializando aplicativo');
     fetchEmployees();
-    startAutoUpdate(); // Inicia atualização automática
+    startAutoUpdate();
 
+    // Alternância de abas
     document.querySelectorAll('.tab-btn').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
@@ -510,6 +601,7 @@ const initApp = () => {
         });
     });
 
+    // Abrir modal para adicionar funcionário
     addDataBtn.addEventListener('click', () => {
         console.log('Abrindo modal para adicionar funcionário');
         employeeForm.reset();
@@ -517,29 +609,49 @@ const initApp = () => {
         modal.style.display = 'block';
     });
 
+    // Fechar modais
     closeBtn.addEventListener('click', () => modal.style.display = 'none');
     window.addEventListener('click', (event) => {
         if (event.target === modal) modal.style.display = 'none';
         if (event.target === deleteModal) deleteModal.style.display = 'none';
     });
 
+    // Aplicar filtros dos gráficos
     document.getElementById('applyHealthFilter').addEventListener('click', renderHealthConditionsChart);
     document.getElementById('applyImcFilter').addEventListener('click', renderImcChart);
     document.getElementById('applyHabitsFilter').addEventListener('click', renderHabitsChart);
+
+    // Filtros de funcionário e filial
     employeeFilter.addEventListener('change', applyFilters);
     employeeFilter.addEventListener('keyup', (e) => {
         if (e.key === 'Enter') applyFilters();
     });
     document.getElementById('branchFilter').addEventListener('change', applyFilters);
+
+    // Exportação de dados
     exportBtn.addEventListener('click', exportData);
+
+    // Confirmação de exclusão
     confirmDeleteBtn.addEventListener('click', () => deleteEmployee(currentDeleteId));
     cancelDeleteBtn.addEventListener('click', () => deleteModal.style.display = 'none');
+
+    // Submissão do formulário
     employeeForm.addEventListener('submit', (e) => {
         e.preventDefault();
         addNewEmployee();
     });
 
+    // Cálculo automático do IMC
+    const weightInput = document.getElementById('weight');
+    const heightInput = document.getElementById('height');
+    weightInput.addEventListener('input', calculateIMC);
+    heightInput.addEventListener('input', calculateIMC);
+
+    // Redesenhar gráficos ao redimensionar a janela
     window.addEventListener('resize', renderCharts);
 };
 
+/**
+ * Inicializa o aplicativo quando o DOM estiver carregado.
+ */
 document.addEventListener('DOMContentLoaded', initApp);
