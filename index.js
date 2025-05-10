@@ -8,10 +8,20 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Caminho do banco com fallback
-const dbPath = process.env.RENDER && fs.existsSync('/data') 
-    ? '/data/employees.db' 
-    : path.join(__dirname, 'employees.db');
+const dbPath = process.env.SQUARE_CLOUD 
+    ? '/app/storage/employees.db' 
+    : process.env.RENDER && fs.existsSync('/data') 
+        ? '/data/employees.db' 
+        : path.join(__dirname, 'employees.db');
 console.log('Caminho do banco:', dbPath);
+
+if (process.env.SQUARE_CLOUD) {
+    const storageDir = '/app/storage';
+    if (!fs.existsSync(storageDir)) {
+        fs.mkdirSync(storageDir, { recursive: true });
+        console.log('Diretório /app/storage criado.');
+    }
+}
 
 if (process.env.RENDER) {
     const dataDir = '/data';
