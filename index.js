@@ -15,10 +15,6 @@ console.log('Porta:', PORT, 'Host:', HOST);
 
 // Configurar caminho do banco de dados
 const storageDir = isSquareCloud ? '/app/storage' : __dirname;
-if (isSquareCloud && !fs.existsSync(storageDir)) {
-  fs.mkdirSync(storageDir, { recursive: true });
-  console.log('Diretório /app/storage criado.');
-}
 const dbPath = isSquareCloud
   ? '/app/storage/employees.db'
   : path.join(__dirname, 'employees.db');
