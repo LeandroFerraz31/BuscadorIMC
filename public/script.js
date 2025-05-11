@@ -2,7 +2,7 @@
  * Configuração da URL base da API, ajustada para ambiente local ou produção.
  * @constant {string} API_BASE_URL - URL da API (localhost:3000 localmente ou domínio do Square Cloud em produção).
  */
-const API_BASE_URL = window.location.hostname.includes('squarecloud.app')
+const API_BASE_URL = window.location.hostname.includes('squareweb.app')
   ? window.location.origin
   : 'http://localhost:3000';
 console.log('API_BASE_URL definido como:', API_BASE_URL);
@@ -52,7 +52,7 @@ async function fetchEmployees() {
     populateBranchFilter();
   } catch (error) {
     console.error('Erro ao buscar funcionários:', error);
-    alert('Não foi possível carregar os dados. Verifique se o servidor está rodando ou tente novamente.');
+    alert('Não foi possível carregar os dados. Verifique se o servidor está rodando ou tente novamente. Detalhes: ' + error.message);
   }
 }
 
@@ -312,9 +312,15 @@ const renderHabitsChart = () => {
  */
 const renderCharts = () => {
   console.log('Renderizando gráficos');
-  renderHealthConditionsChart();
-  renderImcChart();
-  renderHabitsChart();
+  if (filteredData.length > 0) {
+    renderHealthConditionsChart();
+    renderImcChart();
+    renderHabitsChart();
+  } else {
+    document.getElementById('healthConditionsChart').textContent = 'Nenhum dado para exibir. Adicione funcionários primeiro.';
+    document.getElementById('imcChart').textContent = 'Nenhum dado para exibir. Adicione funcionários primeiro.';
+    document.getElementById('habitsChart').textContent = 'Nenhum dado para exibir. Adicione funcionários primeiro.';
+  }
 };
 
 /**
@@ -500,7 +506,7 @@ const addNewEmployee = async () => {
     await fetchEmployees();
   } catch (error) {
     console.error('Erro ao adicionar:', error);
-    alert('Erro ao salvar funcionário. Verifique se o servidor está rodando.');
+    alert('Erro ao salvar funcionário. Verifique se o servidor está rodando. Detalhes: ' + error.message);
   }
 };
 

@@ -129,9 +129,6 @@ app.post('/api/employees', (req, res) => {
   stmt.finalize();
 });
 
-// Removido o endpoint de webhook do n8n, pois não é necessário para uso individual
-// Caso precise no futuro, você pode reativar o endpoint /api/webhook/n8n
-
 app.delete('/api/employees/:id', (req, res) => {
   console.log('DELETE /api/employees/:id solicitado às', new Date().toISOString(), 'ID:', req.params.id);
   db.run('DELETE FROM employees WHERE id = ?', req.params.id, (err) => {
