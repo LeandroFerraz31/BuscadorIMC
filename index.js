@@ -16,48 +16,57 @@ console.log('Caminho do banco:', dbPath);
 
 if (process.env.SQUARE_CLOUD) {
     const storageDir = '/app/storage';
-    if (!fs.existsSync(storageDir)) {
-        fs.mkdirSync(storageDir, { recursive: true });
-        console.log('Diretório /app/storage criado.');
+    try {
+        if (!fs.existsSync(storageDir)) {
+            fs.mkdirSync(storageDir, { recursive: true });
+            console.log('Diretório /app/storage criado.');
+        } else {
+            console.log('Diretório /app/storage já existe.');
+        }
+        fs.accessSync(storageDir, fs.constants.W_OK);
+        console.log('Permissões de escrita em /app/storage confirmadas.');
+    } catch (err) {
+        console.error('Erro ao configurar /app/storage:', err.message);
+        process.exit(1);
     }
 }
 
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Erro ao conectar ao banco:', err.message);
-    } else {
-        console.log('Conectado ao banco SQLite.');
-        db.run(`
-            CREATE TABLE IF NOT EXISTS employees (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                age INTEGER,
-                weight REAL,
-                height REAL,
-                sector TEXT NOT NULL,
-                branch TEXT,
-                conditions TEXT,
-                medication TEXT,
-                pcd TEXT,
-                smoker TEXT,
-                drinker TEXT,
-                imc REAL,
-                fractured TEXT,
-                fracturedPart TEXT,
-                hospitalized TEXT,
-                hospitalizationReason TEXT,
-                lastCheckup TEXT,
-                familyHistory TEXT,
-                healthComplaint TEXT
-            )
-        `, (err) => {
-            if (err) {
-                console.error('Erro ao criar tabela:', err.message);
-            } else {
-                console.log('Tabela employees pronta.');
-            }
-        });
+        process.exit(1);
     }
+    console.log('Conectado ao banco SQLite.');
+    db.run(`
+        CREATE TABLE IF NOT EXISTS employees (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            age INTEGER,
+            weight REAL,
+            height REAL,
+            sector TEXT NOT NULL,
+            branch TEXT,
+            conditions TEXT,
+            medication TEXT,
+            pcd TEXT,
+            smoker TEXT,
+            drinker TEXT,
+            imc REAL,
+            fractured TEXT,
+            fracturedPart TEXT,
+            hospitalized TEXT,
+            hospitalizationReason TEXT,
+            lastCheckup TEXT,
+            familyHistory TEXT,
+            healthComplaint TEXT
+        )
+    `, (err) => {
+        if (err) {
+            console.error('Erro ao criar tabela:', err.message);
+            process.exit(1);
+        }
+        console.log('Tabela employees pronta.');
+    });
 });
 
 // Servir arquivos estáticos
@@ -174,4 +183,5 @@ app.delete('/api/employees/:id', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
+    app.timeout = 60000; // Aumentar o timeout para 60 segundos
 });
