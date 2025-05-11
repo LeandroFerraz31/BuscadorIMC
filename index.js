@@ -5,8 +5,8 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const PORT = 80; // Definir explicitamente a porta 80 para Square Cloud
-const HOST = '0.0.0.0'; // Definir o host como 0.0.0.0 para Square Cloud
+const PORT = process.env.SQUARE_CLOUD ? 80 : 3000; // Porta 80 no Square Cloud, 3000 localmente
+const HOST = process.env.SQUARE_CLOUD ? '0.0.0.0' : 'localhost'; // Host 0.0.0.0 no Square Cloud, localhost localmente
 
 // Configurar caminho do banco de dados
 const storageDir = process.env.SQUARE_CLOUD ? '/app/storage' : __dirname;

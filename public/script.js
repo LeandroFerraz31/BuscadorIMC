@@ -52,7 +52,7 @@ async function fetchEmployees() {
     populateBranchFilter();
   } catch (error) {
     console.error('Erro ao buscar funcionários:', error);
-    alert('Não foi possível carregar os dados. Verifique se o servidor está rodando ou tente novamente. Detalhes: ' + error.message);
+    alert(`Não foi possível carregar os dados. Certifique-se de que o servidor está rodando. Detalhes: ${error.message}`);
   }
 }
 
@@ -424,7 +424,7 @@ const deleteEmployee = async (index) => {
     deleteModal.style.display = 'none';
   } catch (error) {
     console.error('Erro ao excluir:', error);
-    alert('Erro ao excluir funcionário. Verifique se o servidor está rodando.');
+    alert(`Erro ao excluir funcionário. Certifique-se de que o servidor está rodando. Detalhes: ${error.message}`);
   }
 };
 
@@ -506,7 +506,7 @@ const addNewEmployee = async () => {
     await fetchEmployees();
   } catch (error) {
     console.error('Erro ao adicionar:', error);
-    alert('Erro ao salvar funcionário. Verifique se o servidor está rodando. Detalhes: ' + error.message);
+    alert(`Erro ao salvar funcionário. Certifique-se de que o servidor está rodando. Detalhes: ${error.message}`);
   }
 };
 
