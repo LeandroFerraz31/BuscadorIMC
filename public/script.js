@@ -578,22 +578,11 @@ const applyFilters = () => {
 };
 
 /**
- * Inicia a atualização automática dos dados a cada 30 segundos para refletir inserções via n8n.
- */
-function startAutoUpdate() {
-  setInterval(async () => {
-    console.log('Verificando atualizações via n8n...');
-    await fetchEmployees();
-  }, 30000);
-}
-
-/**
  * Inicializa o aplicativo, configurando eventos e carregando dados iniciais.
  */
 const initApp = () => {
   console.log('Inicializando aplicativo');
   fetchEmployees();
-  startAutoUpdate();
 
   // Alternância de abas
   document.querySelectorAll('.tab-btn').forEach(tab => {

@@ -5,7 +5,8 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 80; // Definir explicitamente a porta 80 para Square Cloud
+const HOST = '0.0.0.0'; // Definir o host como 0.0.0.0 para Square Cloud
 
 // Configurar caminho do banco de dados
 const storageDir = process.env.SQUARE_CLOUD ? '/app/storage' : __dirname;
@@ -28,7 +29,7 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
 
 // Configurar Express
 app.use(cors({
-  origin: process.env.SQUARE_CLOUD ? 'https://dashboard-saude.squarecloud.app' : 'http://localhost:3000',
+  origin: process.env.SQUARE_CLOUD ? 'https://buscaativadesaude.squareweb.app' : 'http://localhost:3000',
   methods: ['GET', 'POST', 'DELETE', 'PUT'],
   allowedHeaders: ['Content-Type']
 }));
@@ -128,26 +129,8 @@ app.post('/api/employees', (req, res) => {
   stmt.finalize();
 });
 
-app.post('/api/webhook/n8n', (req, res) => {
-  console.log('Webhook do n8n recebido às', new Date().toISOString(), 'com dados:', req.body);
-  const { name, age, weight, height, sector, branch, conditions } = req.body;
-  if (!name || !sector || !branch) {
-    console.warn('Dados inválidos no webhook:', { name, sector, branch });
-    return res.status(400).json({ error: 'Dados inválidos no webhook' });
-  }
-  db.run(
-    `INSERT INTO employees (name, age, weight, height, sector, branch, conditions, pcd, smoker, drinker, imc) VALUES (?, ?, ?, ?, ?, ?, ?, 'Não', 'Não', 'Não', 0)`,
-    [name, age || 30, weight || 70, height || 1.7, sector, branch, JSON.stringify(conditions || [])],
-    function(err) {
-      if (err) {
-        console.error('Erro ao processar webhook:', err.message);
-        return res.status(500).json({ error: 'Erro ao processar webhook' });
-      }
-      console.log('Funcionário adicionado via n8n:', { id: this.lastID });
-      res.status(201).json({ id: this.lastID });
-    }
-  );
-});
+// Removido o endpoint de webhook do n8n, pois não é necessário para uso individual
+// Caso precise no futuro, você pode reativar o endpoint /api/webhook/n8n
 
 app.delete('/api/employees/:id', (req, res) => {
   console.log('DELETE /api/employees/:id solicitado às', new Date().toISOString(), 'ID:', req.params.id);
@@ -186,6 +169,6 @@ process.on('SIGTERM', () => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Servidor rodando em ${HOST}:${PORT}`);
 });
