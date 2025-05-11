@@ -26,14 +26,14 @@ if (process.env.SQUARE_CLOUD) {
         fs.accessSync(storageDir, fs.constants.W_OK);
         console.log('Permissões de escrita em /app/storage confirmadas.');
     } catch (err) {
-        console.error('Erro ao configurar /app/storage:', err.message);
+        console.error('Erro ao configurar /app/storage:', err.message, err.stack);
         process.exit(1);
     }
 }
 
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
-        console.error('Erro ao conectar ao banco:', err.message);
+        console.error('Erro ao conectar ao banco:', err.message, err.stack);
         process.exit(1);
     }
     console.log('Conectado ao banco SQLite.');
@@ -62,7 +62,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
         )
     `, (err) => {
         if (err) {
-            console.error('Erro ao criar tabela:', err.message);
+            console.error('Erro ao criar tabela:', err.message, err.stack);
             process.exit(1);
         }
         console.log('Tabela employees pronta.');
@@ -72,12 +72,24 @@ const db = new sqlite3.Database(dbPath, (err) => {
 // Servir arquivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Endpoint de health check
+app.get('/api/health', (req, res) => {
+    db.get('SELECT 1', (err) => {
+        if (err) {
+            console.error('Erro no health check:', err.message, err.stack);
+            res.status(500).json({ status: 'error', message: 'Banco de dados inacessível' });
+        } else {
+            res.json({ status: 'ok', message: 'Servidor e banco de dados funcionando' });
+        }
+    });
+});
+
 // Endpoint para obter todos os funcionários
 app.get('/api/employees', (req, res) => {
     console.log('GET /api/employees solicitado');
     db.all(`SELECT * FROM employees`, [], (err, rows) => {
         if (err) {
-            console.error('Erro ao buscar funcionários:', err.message);
+            console.error('Erro ao buscar funcionários:', err.message, err.stack);
             res.status(500).json({ error: 'Erro ao buscar dados' });
             return;
         }
@@ -122,7 +134,7 @@ app.post('/api/employees', (req, res) => {
             familyHistoryJson, healthComplaint, id,
             function(err) {
                 if (err) {
-                    console.error('Erro ao atualizar:', err.message);
+                    console.error('Erro ao atualizar:', err.message, err.stack);
                     res.status(500).json({ error: 'Erro ao atualizar funcionário' });
                     return;
                 }
@@ -146,7 +158,7 @@ app.post('/api/employees', (req, res) => {
             hospitalizationReason, lastCheckup, familyHistoryJson, healthComplaint,
             function(err) {
                 if (err) {
-                    console.error('Erro ao inserir:', err.message);
+                    console.error('Erro ao inserir:', err.message, err.stack);
                     res.status(500).json({ error: 'Erro ao salvar funcionário' });
                     return;
                 }
@@ -165,7 +177,7 @@ app.delete('/api/employees/:id', (req, res) => {
     const stmt = db.prepare(`DELETE FROM employees WHERE id=?`);
     stmt.run(id, function(err) {
         if (err) {
-            console.error('Erro ao excluir:', err.message);
+            console.error('Erro ao excluir:', err.message, err.stack);
             res.status(500).json({ error: 'Erro ao excluir funcionário' });
             return;
         }
@@ -179,9 +191,10 @@ app.delete('/api/employees/:id', (req, res) => {
     stmt.finalize();
 });
 
-// Iniciar o servidor
-const PORT = process.env.PORT || 80;
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-    app.timeout = 60000; // Aumentar o timeout para 60 segundos
+// Iniciar o servidor na porta e host apropriados
+const PORT = process.env.PORT || 80; // Porta 80 por padrão
+const HOST = process.env.SQUARE_CLOUD ? '0.0.0.0' : 'localhost'; // 0.0.0.0 no Square Cloud
+app.listen(PORT, HOST, () => {
+    console.log(`Servidor rodando em ${HOST}:${PORT}`);
+    app.timeout = 60000; // Timeout de 60 segundos
 });
