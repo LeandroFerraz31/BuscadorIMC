@@ -27,6 +27,90 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
   console.log('Conectado ao banco SQLite em', dbPath);
 });
 
+// Função para criar a tabela e adicionar colunas de forma sequencial
+function initializeDatabase() {
+  return new Promise((resolve, reject) => {
+    const createTableSQL = `CREATE TABLE IF NOT EXISTS employees (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      age INTEGER,
+      weight REAL,
+      height REAL,
+      sector TEXT NOT NULL,
+      branch TEXT NOT NULL,
+      conditions TEXT NOT NULL,
+      medication TEXT,
+      pcd TEXT NOT NULL,
+      smoker TEXT NOT NULL,
+      drinker TEXT NOT NULL,
+      imc REAL,
+      fractured TEXT,
+      fracturedPart TEXT,
+      hospitalized TEXT,
+      hospitalizationReason TEXT,
+      lastCheckup TEXT,
+      familyHistory TEXT,
+      healthComplaint TEXT
+    )`;
+    db.run(createTableSQL, (err) => {
+      if (err) {
+        console.error('Erro ao criar tabela:', err.message);
+        return reject(err);
+      }
+      console.log('Tabela employees criada ou já existente');
+      resolve();
+    });
+  });
+}
+
+// Função para adicionar colunas, se necessário
+function addColumnIfNotExists(column, type) {
+  return new Promise((resolve, reject) => {
+    db.run(`ALTER TABLE employees ADD COLUMN ${column} ${type}`, (err) => {
+      if (err) {
+        if (err.message.includes('duplicate column name')) {
+          console.log(`Coluna ${column} já existente`);
+          resolve();
+        } else {
+          console.error(`Erro ao adicionar coluna ${column}:`, err.message);
+          reject(err);
+        }
+      } else {
+        console.log(`Coluna ${column} adicionada`);
+        resolve();
+      }
+    });
+  });
+}
+
+// Inicializar o banco de dados e adicionar colunas em sequência
+async function setupDatabase() {
+  try {
+    await initializeDatabase();
+    const columns = [
+      { name: 'age', type: 'INTEGER' },
+      { name: 'weight', type: 'REAL' },
+      { name: 'height', type: 'REAL' },
+      { name: 'fractured', type: 'TEXT' },
+      { name: 'fracturedPart', type: 'TEXT' },
+      { name: 'hospitalized', type: 'TEXT' },
+      { name: 'hospitalizationReason', type: 'TEXT' },
+      { name: 'lastCheckup', type: 'TEXT' },
+      { name: 'familyHistory', type: 'TEXT' },
+      { name: 'healthComplaint', type: 'TEXT' }
+    ];
+    for (const column of columns) {
+      await addColumnIfNotExists(column.name, column.type);
+    }
+    console.log('Inicialização do banco de dados concluída');
+  } catch (err) {
+    console.error('Erro na inicialização do banco de dados:', err.message);
+  }
+}
+
+// Chamar a função de inicialização ao iniciar o servidor
+setupDatabase();
+
 // Configurar Express
 app.use(cors({
   origin: process.env.SQUARE_CLOUD ? 'https://buscaativadesaude.squareweb.app' : 'http://localhost:3000',
@@ -35,55 +119,6 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Criar tabela employees
-const createTableSQL = `CREATE TABLE IF NOT EXISTS employees (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  age INTEGER,
-  weight REAL,
-  height REAL,
-  sector TEXT NOT NULL,
-  branch TEXT NOT NULL,
-  conditions TEXT NOT NULL,
-  medication TEXT,
-  pcd TEXT NOT NULL,
-  smoker TEXT NOT NULL,
-  drinker TEXT NOT NULL,
-  imc REAL,
-  fractured TEXT,
-  fracturedPart TEXT,
-  hospitalized TEXT,
-  hospitalizationReason TEXT,
-  lastCheckup TEXT,
-  familyHistory TEXT,
-  healthComplaint TEXT
-)`;
-db.run(createTableSQL, (err) => {
-  if (err) console.error('Erro ao criar tabela:', err.message);
-  else console.log('Tabela employees criada ou já existente');
-});
-
-// Adicionar colunas, se necessário
-const addColumnIfNotExists = (column, type) => {
-  db.run(`ALTER TABLE employees ADD COLUMN ${column} ${type}`, (err) => {
-    if (err && !err.message.includes('duplicate column name')) {
-      console.error(`Erro ao adicionar coluna ${column}:`, err.message);
-    } else {
-      console.log(`Coluna ${column} adicionada ou já existente`);
-    }
-  });
-};
-addColumnIfNotExists('age', 'INTEGER');
-addColumnIfNotExists('weight', 'REAL');
-addColumnIfNotExists('height', 'REAL');
-addColumnIfNotExists('fractured', 'TEXT');
-addColumnIfNotExists('fracturedPart', 'TEXT');
-addColumnIfNotExists('hospitalized', 'TEXT');
-addColumnIfNotExists('hospitalizationReason', 'TEXT');
-addColumnIfNotExists('lastCheckup', 'TEXT');
-addColumnIfNotExists('familyHistory', 'TEXT');
-addColumnIfNotExists('healthComplaint', 'TEXT');
 
 // Endpoints
 app.get('/api/employees', (req, res) => {
