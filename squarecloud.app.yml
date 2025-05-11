@@ -1,7 +1,0 @@
-main: index.js
-version: 1.0.0
-type: website
-memory: 512MB
-cpu: 1
-storage:
-  - /app/storage
