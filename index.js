@@ -180,7 +180,7 @@ app.delete('/api/employees/:id', (req, res) => {
 });
 
 // Iniciar o servidor
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 80;
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
     app.timeout = 60000; // Aumentar o timeout para 60 segundos

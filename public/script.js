@@ -1,6 +1,6 @@
 const API_BASE_URL = window.location.hostname.includes('squarecloud.app') 
     ? window.location.origin 
-    : 'http://localhost:3000';
+    : 'http://localhost:80';
 console.log('API_BASE_URL definido como:', API_BASE_URL);
 
 let employeesData = [];
