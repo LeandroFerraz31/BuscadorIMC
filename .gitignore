@@ -1,5 +1,5 @@
 node_modules/
-employees.db
+
 .env
 
 # Local Netlify folder
