@@ -20,6 +20,28 @@ const dbPath = isSquareCloud
   : path.join(__dirname, 'employees.db');
 console.log('Caminho do banco:', dbPath);
 
+// Verificar permissões do diretório no Square Cloud
+if (isSquareCloud) {
+  try {
+    // Verificar se o diretório existe
+    if (!fs.existsSync(storageDir)) {
+  console.warn('Diretório /app/storage não existe. Criando...');
+  fs.mkdirSync(storageDir, { recursive: true });
+  console.log('Diretório /app/storage criado com sucesso.');
+}
+
+
+    // Verificar permissões de escrita
+    const testFile = path.join(storageDir, 'test-write-permissions.txt');
+    fs.writeFileSync(testFile, 'Teste de permissões', { flag: 'w' });
+    console.log('Permissões de escrita confirmadas em /app/storage');
+    fs.unlinkSync(testFile); // Remover o arquivo de teste
+  } catch (err) {
+    console.error('Erro ao verificar/acessar o diretório /app/storage:', err.message);
+    process.exit(1);
+  }
+}
+
 // Inicializar o banco de dados
 const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
   if (err) {
