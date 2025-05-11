@@ -32,25 +32,28 @@ let currentDeleteId = null;
  * Carrega os dados dos funcionários da API e atualiza a interface.
  * @async
  */
+// script.js, por volta da linha 40
 async function fetchEmployees() {
   try {
-    const url = `${API_BASE_URL}/api/employees`;
-    console.log('Buscando funcionários em', url);
-    const response = await fetch(url);
+    const response = await fetch('http://localhost:3000/api/employees', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
     if (!response.ok) {
-      throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
     }
-    employeesData = await response.json();
-    filteredData = [...employeesData];
-    console.log('Funcionários carregados:', employeesData);
-    renderTable();
-    renderSummaryCards();
-    renderCharts();
-    populateEmployeeSuggestions();
-    populateBranchFilter();
+    const data = await response.json();
+    return data; // Prossegue com os dados dos funcionários
   } catch (error) {
-    console.error('Erro ao buscar funcionários:', error);
-    alert(`Não foi possível carregar os dados. Certifique-se de que o servidor está rodando. Detalhes: ${error.message}`);
+    console.error('Erro ao buscar funcionários:', error.message);
+    // Exibe mensagem no DOM ou alerta para o usuário
+    const errorElement = document.createElement('div');
+    errorElement.style.color = 'red';
+    errorElement.textContent = 'Não foi possível carregar os funcionários. Verifique se o servidor está ativo.';
+    document.body.prepend(errorElement);
+    return []; // Retorna array vazio para evitar quebras no app
   }
 }
 
@@ -307,19 +310,44 @@ const renderHabitsChart = () => {
 
 /**
  * Renderiza todos os gráficos (Condições de Saúde, IMC, Hábitos).
- */
-const renderCharts = () => {
+ */// script.js, por volta da linha 312
+async function renderCharts() {
   console.log('Renderizando gráficos');
-  if (filteredData.length > 0) {
-    renderHealthConditionsChart();
-    renderImcChart();
-    renderHabitsChart();
-  } else {
-    document.getElementById('healthConditionsChart').textContent = 'Nenhum dado para exibir. Adicione funcionários primeiro.';
-    document.getElementById('imcChart').textContent = 'Nenhum dado para exibir. Adicione funcionários primeiro.';
-    document.getElementById('habitsChart').textContent = 'Nenhum dado para exibir. Adicione funcionários primeiro.';
+  try {
+    const response = await fetch('https://buscaativadesaude.squareweb.app/api/charts', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      timeout: 10000, // Timeout de 10 segundos (se o navegador suportar)
+    });
+    if (response.status === 408) {
+      console.warn('Timeout na requisição. Tentando novamente...');
+      // Tenta novamente após 2 segundos
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return renderCharts(); // Rechama a função
+    }
+    if (!response.ok) {
+      throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
+    }
+    const chartData = await response.json();
+    // Prossegue com a renderização dos gráficos
+    renderChartToDOM(chartData); // Supondo que existe uma função para renderizar
+  } catch (error) {
+    console.error('Erro ao renderizar gráficos:', error.message);
+    // Exibe mensagem no DOM
+    const errorElement = document.createElement('div');
+    errorElement.style.color = 'red';
+    errorElement.textContent = 'Erro ao carregar os gráficos. Tente novamente mais tarde.';
+    document.body.prepend(errorElement);
   }
-};
+}
+
+// Exemplo de função placeholder para renderizar gráficos
+function renderChartToDOM(data) {
+  // Implementação da renderização (substitua pelo seu código real)
+  console.log('Dados do gráfico:', data);
+}
 
 /**
  * Popula a lista de sugestões de nomes de funcionários no filtro.
@@ -557,29 +585,27 @@ const exportData = () => {
 
 /**
  * Aplica os filtros de funcionário e filial à tabela e gráficos.
- */
-const applyFilters = () => {
-  console.log('Aplicando filtros');
-  const employeeFilterValue = employeeFilter.value.trim();
-  const branchFilterValue = document.getElementById('branchFilter').value;
-
-  if (employeeFilterValue && employeeFilterValue !== 'all') {
-    const selectedEmployee = employeesData.find(employee => employee.name.toLowerCase() === employeeFilterValue.toLowerCase());
-    if (selectedEmployee) {
-      filteredData = [selectedEmployee];
-    } else {
-      filteredData = [...employeesData];
-    }
-  } else if (branchFilterValue !== 'all') {
-    filteredData = employeesData.filter(employee => employee.branch === branchFilterValue);
+ */// script.js, por volta da linha 590
+async function initApp() {
+  console.log('Inicializando aplicativo');
+  const employees = await fetchEmployees();
+  if (employees.length > 0) {
+    // Prossegue com a lógica do app
+    console.log('Funcionários carregados:', employees);
+    // Exemplo: renderizar lista de funcionários
+    renderEmployees(employees); // Substitua pela sua função
   } else {
-    filteredData = [...employeesData];
+    console.warn('Nenhum funcionário carregado.');
   }
+  // Chama renderização de gráficos
+  await renderCharts();
+}
 
-  renderTable();
-  renderSummaryCards();
-  renderCharts();
-};
+// Exemplo de função placeholder para renderizar funcionários
+function renderEmployees(employees) {
+  // Implementação da renderização (substitua pelo seu código real)
+  console.log('Renderizando funcionários:', employees);
+}
 
 /**
  * Inicializa o aplicativo, configurando eventos e carregando dados iniciais.
