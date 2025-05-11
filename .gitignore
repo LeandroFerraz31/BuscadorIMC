@@ -10,3 +10,6 @@ squarecloud.app
 
 # Arquivos temporários
 *.zip
+
+render.yaml
+# Arquivos de configuração do Render

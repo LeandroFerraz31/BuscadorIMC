@@ -1,351 +1,334 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Busca Ativa de Saúde</title>
-    <!-- Carrega o arquivo de estilos -->
-    <link rel="stylesheet" href="styles.css">
-    <!-- Biblioteca XLSX para exportação de dados em Excel -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Busca Ativa de Saúde</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-    <!-- Cabeçalho com título e botões de ação -->
-    <header>
-        <h1>Busca Ativa de Saúde</h1>
-        <div class="actions">
-            <button id="addDataBtn">Adicionar Funcionário</button>
-            <button id="exportBtn">Exportar Dados</button>
-        </div>
-    </header>
+  <header>
+    <h1>Busca Ativa de Saúde</h1>
+    <div class="actions">
+      <button id="addDataBtn">Adicionar Funcionário</button>
+      <button id="exportBtn">Exportar Dados</button>
+    </div>
+  </header>
+  
+  <main>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="detailed-data">Dados Detalhados</button>
+    </div>
     
-    <!-- Conteúdo principal -->
-    <main>
-        <!-- Abas para alternar entre Dashboard e Dados Detalhados -->
-        <div class="tabs">
-            <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
-            <button class="tab-btn" data-tab="detailed-data">Dados Detalhados</button>
+    <section class="filters-section">
+      <div class="filter-container">
+        <label for="employeeFilter">Funcionário:</label>
+        <input type="text" id="employeeFilter" list="employeeSuggestions" placeholder="Digite o nome do funcionário">
+        <datalist id="employeeSuggestions">
+          <option value="all">Todos os Funcionários</option>
+        </datalist>
+      </div>
+      <div class="filter-container">
+        <label for="branchFilter">Unidade/Filial:</label>
+        <select id="branchFilter">
+          <option value="all">Todas as Unidades</option>
+        </select>
+      </div>
+    </section>
+    
+    <div class="tab-content active" id="dashboard-content">
+      <section class="summary-cards">
+        <div class="card" id="totalEmployees">
+          <h3>Total de Funcionários</h3>
+          <p class="number">0</p>
         </div>
-        
-        <!-- Seção de filtros -->
-        <section class="filters-section">
-            <div class="filter-container">
-                <label for="employeeFilter">Funcionário:</label>
-                <input type="text" id="employeeFilter" list="employeeSuggestions" placeholder="Digite o nome do funcionário">
-                <datalist id="employeeSuggestions">
-                    <option value="all">Todos os Funcionários</option>
-                </datalist>
-            </div>
-            <div class="filter-container">
-                <label for="branchFilter">Unidade/Filial:</label>
-                <select id="branchFilter">
-                    <option value="all">Todas as Unidades</option>
-                </select>
-            </div>
-        </section>
-        
-        <!-- Conteúdo da aba Dashboard -->
-        <div class="tab-content active" id="dashboard-content">
-            <!-- Cartões de resumo -->
-            <section class="summary-cards">
-                <div class="card" id="totalEmployees">
-                    <h3>Total de Funcionários</h3>
-                    <p class="number">0</p>
-                </div>
-                <div class="card" id="medicationUsers">
-                    <h3>Uso de Medicação</h3>
-                    <p class="number">0</p>
-                </div>
-                <div class="card" id="pcdCount">
-                    <h3>PCDs</h3>
-                    <p class="number">0</p>
-                </div>
-            </section>
+        <div class="card" id="medicationUsers">
+          <h3>Uso de Medicação</h3>
+          <p class="number">0</p>
+        </div>
+        <div class="card" id="pcdCount">
+          <h3>PCDs</h3>
+          <p class="number">0</p>
+        </div>
+      </section>
 
-            <!-- Gráficos -->
-            <section class="charts-container">
-                <!-- Gráfico de Condições de Saúde -->
-                <div class="chart-wrapper full-width">
-                    <h2>Condições de Saúde</h2>
-                    <div class="chart-filters">
-                        <select id="healthConditionsFilter" multiple>
-                            <option value="all" selected>Todos</option>
-                            <option value="HAS">Hipertensão (HAS)</option>
-                            <option value="DM">Diabetes (DM)</option>
-                            <option value="Cardíaco">Cardíaco</option>
-                            <option value="Asmático">Asmático</option>
-                            <option value="CA">Câncer (CA)</option>
-                            <option value="Ansiedade">Ansiedade</option>
-                            <option value="Renal">Renal</option>
-                            <option value="Depressão">Depressão</option>
-                            <option value="Trombose">Trombose</option>
-                            <option value="Hérnia">Hérnia</option>
-                            <option value="Epilepsia">Epilepsia</option>
-                            <option value="Tendinite">Tendinite</option>
-                            <option value="Psiquiátrico">Psiquiátrico</option>
-                        </select>
-                        <button id="applyHealthFilter" class="filter-btn">Aplicar</button>
-                    </div>
-                    <div class="chart" id="healthConditionsChart"></div>
-                    <div class="chart-legend">
-                        <span class="legend-item">
-                            <span class="legend-color health-condition"></span>
-                            <span class="legend-text">Condições de Saúde</span>
-                        </span>
-                    </div>
-                </div>
-                
-                <!-- Sub-gráficos (IMC e Hábitos) -->
-                <div class="sub-charts-container">
-                    <!-- Gráfico de IMC -->
-                    <div class="chart-wrapper">
-                        <h2>Distribuição de IMC</h2>
-                        <div class="chart-filters">
-                            <select id="imcFilter" multiple>
-                                <option value="all" selected>Todos</option>
-                                <option value="imcBelow18">Abaixo de 18</option>
-                                <option value="imc18to24">18-24</option>
-                                <option value="imc24to29">24-29</option>
-                                <option value="imc29to34">29-34</option>
-                                <option value="imc34to39">34-39</option>
-                                <option value="imcAbove39">Acima de 39</option>
-                            </select>
-                            <button id="applyImcFilter" class="filter-btn">Aplicar</button>
-                        </div>
-                        <div class="chart" id="imcChart"></div>
-                        <div class="chart-legend">
-                            <span class="legend-item">
-                                <span class="legend-color imc-category"></span>
-                                <span class="legend-text">Categorias de IMC</span>
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <!-- Gráfico de Hábitos -->
-                    <div class="chart-wrapper">
-                        <h2>Hábitos</h2>
-                        <div class="chart-filters">
-                            <select id="habitsFilter" multiple>
-                                <option value="all" selected>Todos</option>
-                                <option value="smoker">Fumantes</option>
-                                <option value="drinker">Etilistas</option>
-                                <option value="medication">Medicação</option>
-                            </select>
-                            <button id="applyHabitsFilter" class="filter-btn">Aplicar</button>
-                        </div>
-                        <div class="chart" id="habitsChart"></div>
-                        <div class="chart-legend">
-                            <span class="legend-item">
-                                <span class="legend-color habits"></span>
-                                <span class="legend-text">Hábitos</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </section>
+      <section class="charts-container">
+        <div class="chart-wrapper full-width">
+          <h2>Condições de Saúde</h2>
+          <div class="chart-filters">
+            <select id="healthConditionsFilter" multiple>
+              <option value="all" selected>Todos</option>
+              <option value="HAS">Hipertensão (HAS)</option>
+              <option value="DM">Diabetes (DM)</option>
+              <option value="Cardíaco">Cardíaco</option>
+              <option value="Asmático">Asmático</option>
+              <option value="CA">Câncer (CA)</option>
+              <option value="Ansiedade">Ansiedade</option>
+              <option value="Renal">Renal</option>
+              <option value="Depressão">Depressão</option>
+              <option value="Trombose">Trombose</option>
+              <option value="Hérnia">Hérnia</option>
+              <option value="Epilepsia">Epilepsia</option>
+              <option value="Tendinite">Tendinite</option>
+              <option value="Psiquiátrico">Psiquiátrico</option>
+            </select>
+            <button id="applyHealthFilter" class="filter-btn">Aplicar</button>
+          </div>
+          <div class="chart" id="healthConditionsChart"></div>
+          <div class="chart-legend">
+            <span class="legend-item">
+              <span class="legend-color health-condition"></span>
+              <span class="legend-text">Condições de Saúde</span>
+            </span>
+          </div>
         </div>
         
-        <!-- Conteúdo da aba Dados Detalhados -->
-        <div class="tab-content" id="detailed-data-content">
-            <section class="data-table-section">
-                <h2>Dados Detalhados</h2>
-                <div class="table-container">
-                    <table id="dataTable">
-                        <thead>
-                            <tr>
-                                <th>Nome</th>
-                                <th>Idade</th>
-                                <th>Peso</th>
-                                <th>Altura</th>
-                                <th>Setor</th>
-                                <th>Filial/Unidade</th>
-                                <th>Patologia</th>
-                                <th>Medicação</th>
-                                <th>PCD</th>
-                                <th>Fumante</th>
-                                <th>Etilista</th>
-                                <th>IMC</th>
-                                <th>Fraturou?</th>
-                                <th>Parte Fraturada</th>
-                                <th>Internado?</th>
-                                <th>Motivo/Tempo</th>
-                                <th>Último Check-up</th>
-                                <th>Histórico Familiar</th>
-                                <th>Queixa de Saúde</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
-        </div>
-    </main>
-    
-    <!-- Modal para adicionar/editar funcionário -->
-    <div id="dataModal" class="modal">
-        <div class="modal-content">
-            <span class="close">×</span>
-            <h2>Adicionar Novo Funcionário</h2>
-            <form id="employeeForm">
-                <div class="form-group">
-                    <label for="name">Nome:</label>
-                    <input type="text" id="name" required>
-                </div>
-                <div class="form-group">
-                    <label for="age">Idade:</label>
-                    <input type="number" id="age" min="16" max="120" required>
-                </div>
-                <div class="form-group">
-                    <label for="weight">Peso (kg):</label>
-                    <input type="number" id="weight" min="30" max="300" step="0.1" required>
-                </div>
-                <div class="form-group">
-                    <label for="height">Altura (m):</label>
-                    <input type="number" id="height" min="1" max="2.5" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label for="sector">Setor:</label>
-                    <input type="text" id="sector" required>
-                </div>
-                <div class="form-group">
-                    <label for="branch">Filial/Unidade:</label>
-                    <select id="branch" required>
-                        <option value="">Selecione uma unidade</option>
-                        <option value="Matriz">Matriz</option>
-                        <option value="CA">CA</option>
-                        <option value="F1">F1</option>
-                        <option value="F2">F2</option>
-                        <option value="F3">F3</option>
-                        <option value="F5">F5</option>
-                        <option value="F6">F6</option>
-                        <option value="F7">F7</option>
-                        <option value="F9">F9</option>
-                        <option value="F10">F10</option>
-                        <option value="F12">F12</option>
-                        <option value="F14">F14</option>
-                        <option value="F17">F17</option>
-                        <option value="F18">F18</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Condições de Saúde:</label>
-                    <div class="checkbox-group">
-                        <label><input type="checkbox" name="condition" value="HAS"> Hipertensão (HAS)</label>
-                        <label><input type="checkbox" name="condition" value="DM"> Diabetes (DM)</label>
-                        <label><input type="checkbox" name="condition" value="Cardíaco"> Cardíaco</label>
-                        <label><input type="checkbox" name="condition" value="Asmático"> Asmático</label>
-                        <label><input type="checkbox" name="condition" value="CA"> Câncer (CA)</label>
-                        <label><input type="checkbox" name="condition" value="Ansiedade"> Ansiedade</label>
-                        <label><input type="checkbox" name="condition" value="Renal"> Renal</label>
-                        <label><input type="checkbox" name="condition" value="Depressão"> Depressão</label>
-                        <label><input type="checkbox" name="condition" value="Trombose"> Trombose</label>
-                        <label><input type="checkbox" name="condition" value="Hérnia"> Hérnia</label>
-                        <label><input type="checkbox" name="condition" value="Epilepsia"> Epilepsia</label>
-                        <label><input type="checkbox" name="condition" value="Tendinite"> Tendinite</label>
-                        <label><input type="checkbox" name="condition" value="Psiquiátrico"> Psiquiátrico</label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="medication">Medicação em uso:</label>
-                    <input type="text" id="medication">
-                </div>
-                <div class="form-group">
-                    <label for="pcd">PCD:</label>
-                    <select id="pcd">
-                        <option value="Não">Não</option>
-                        <option value="Sim, Físico">Sim, Físico</option>
-                        <option value="Sim, Visual">Sim, Visual</option>
-                        <option value="Sim, Auditivo">Sim, Auditivo</option>
-                        <option value="Sim, Intelectual">Sim, Intelectual</option>
-                        <option value="Sim, Múltiplo">Sim, Múltiplo</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Fumante:</label>
-                    <div class="radio-group">
-                        <label><input type="radio" name="smoker" value="Sim"> Sim</label>
-                        <label><input type="radio" name="smoker" value="Não" checked> Não</label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Etilista:</label>
-                    <div class="radio-group">
-                        <label><input type="radio" name="drinker" value="Sim"> Sim</label>
-                        <label><input type="radio" name="drinker" value="Não" checked> Não</label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="imc">IMC:</label>
-                    <input type="number" id="imc" min="10" max="60" step="0.1" readonly>
-                </div>
-                <div class="form-group">
-                    <label>Já fraturou alguma parte do corpo?</label>
-                    <div class="radio-group">
-                        <label><input type="radio" name="fractured" value="Sim"> Sim</label>
-                        <label><input type="radio" name="fractured" value="Não" checked> Não</label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="fracturedPart">Qual parte fraturou?</label>
-                    <input type="text" id="fracturedPart">
-                </div>
-                <div class="form-group">
-                    <label>Já esteve internado?</label>
-                    <div class="radio-group">
-                        <label><input type="radio" name="hospitalized" value="Sim"> Sim</label>
-                        <label><input type="radio" name="hospitalized" value="Não" checked> Não</label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="hospitalizationReason">Por qual motivo e há quanto tempo atrás?</label>
-                    <input type="text" id="hospitalizationReason">
-                </div>
-                <div class="form-group">
-                    <label for="lastCheckup">Quando fez o último check-up médico?</label>
-                    <input type="text" id="lastCheckup">
-                </div>
-                <div class="form-group">
-                    <label>Histórico Familiar (1º grau):</label>
-                    <div class="checkbox-group">
-                        <label><input type="checkbox" name="familyHistory" value="HAS"> HAS</label>
-                        <input type="text" name="familyHasWho" placeholder="Quem?">
-                        <label><input type="checkbox" name="familyHistory" value="DM"> DM</label>
-                        <input type="text" name="familyDmWho" placeholder="Quem?">
-                        <label><input type="checkbox" name="familyHistory" value="Cardíaco"> Cardíaco</label>
-                        <input type="text" name="familyCardiacWho" placeholder="Quem?">
-                        <label><input type="checkbox" name="familyHistory" value="CA"> Câncer (CA)</label>
-                        <input type="text" name="familyCaWho" placeholder="Quem?">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="healthComplaint">Alguma queixa de saúde?</label>
-                    <input type="text" id="healthComplaint">
-                </div>
-                <input type="hidden" id="employeeId" value="">
-                <button type="submit">Salvar</button>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Modal para confirmação de exclusão -->
-    <div id="deleteModal" class="modal">
-        <div class="modal-content delete-modal">
-            <h2>Confirmar Exclusão</h2>
-            <p>Tem certeza que deseja excluir este funcionário?</p>
-            <div class="modal-actions">
-                <button id="confirmDelete" class="btn-danger">Excluir</button>
-                <button id="cancelDelete">Cancelar</button>
+        <div class="sub-charts-container">
+          <div class="chart-wrapper">
+            <h2>Distribuição de IMC</h2>
+            <div class="chart-filters">
+              <select id="imcFilter" multiple>
+                <option value="all" selected>Todos</option>
+                <option value="imcBelow18">Abaixo de 18</option>
+                <option value="imc18to24">18-24</option>
+                <option value="imc24to29">24-29</option>
+                <option value="imc29to34">29-34</option>
+                <option value="imc34to39">34-39</option>
+                <option value="imcAbove39">Acima de 39</option>
+              </select>
+              <button id="applyImcFilter" class="filter-btn">Aplicar</button>
             </div>
+            <div class="chart" id="imcChart"></div>
+            <div class="chart-legend">
+              <span class="legend-item">
+                <span class="legend-color imc-category"></span>
+                <span class="legend-text">Categorias de IMC</span>
+              </span>
+            </div>
+          </div>
+          
+          <div class="chart-wrapper">
+            <h2>Hábitos</h2>
+            <div class="chart-filters">
+              <select id="habitsFilter" multiple>
+                <option value="all" selected>Todos</option>
+                <option value="smoker">Fumantes</option>
+                <option value="drinker">Etilistas</option>
+                <option value="medication">Medicação</option>
+              </select>
+              <button id="applyHabitsFilter" class="filter-btn">Aplicar</button>
+            </div>
+            <div class="chart" id="habitsChart"></div>
+            <div class="chart-legend">
+              <span class="legend-item">
+                <span class="legend-color habits"></span>
+                <span class="legend-text">Hábitos</span>
+              </span>
+            </div>
+          </div>
         </div>
+      </section>
     </div>
     
-    <!-- Rodapé -->
-    <footer>
-        <p>© 2025 Dashboard de Indicadores de Saúde</p>
-    </footer>
-    
-    <!-- Carrega o script principal -->
-    <script src="script.js"></script>
+    <div class="tab-content" id="detailed-data-content">
+      <section class="data-table-section">
+        <h2>Dados Detalhados</h2>
+        <div class="table-container">
+          <table id="dataTable">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Idade</th>
+                <th>Peso</th>
+                <th>Altura</th>
+                <th>Setor</th>
+                <th>Filial/Unidade</th>
+                <th>Patologia</th>
+                <th>Medicação</th>
+                <th>PCD</th>
+                <th>Fumante</th>
+                <th>Etilista</th>
+                <th>IMC</th>
+                <th>Fraturou?</th>
+                <th>Parte Fraturada</th>
+                <th>Internado?</th>
+                <th>Motivo/Tempo</th>
+                <th>Último Check-up</th>
+                <th>Histórico Familiar</th>
+                <th>Queixa de Saúde</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+  
+  <div id="dataModal" class="modal">
+    <div class="modal-content">
+      <span class="close">×</span>
+      <h2>Adicionar Novo Funcionário</h2>
+      <form id="employeeForm">
+        <div class="form-group">
+          <label for="name">Nome:</label>
+          <input type="text" id="name" required>
+        </div>
+        <div class="form-group">
+          <label for="age">Idade:</label>
+          <input type="number" id="age" min="16" max="120">
+        </div>
+        <div class="form-group">
+          <label for="weight">Peso (kg):</label>
+          <input type="number" id="weight" min="30" max="300" step="0.1" required>
+        </div>
+        <div class="form-group">
+          <label for="height">Altura (m):</label>
+          <input type="number" id="height" min="1" max="2.5" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label for="sector">Setor:</label>
+          <input type="text" id="sector" required>
+        </div>
+        <div class="form-group">
+          <label for="branch">Filial/Unidade:</label>
+          <select id="branch" required>
+            <option value="">Selecione uma unidade</option>
+            <option value="Matriz">Matriz</option>
+            <option value="CA">CA</option>
+            <option value="F1">F1</option>
+            <option value="F2">F2</option>
+            <option value="F3">F3</option>
+            <option value="F5">F5</option>
+            <option value="F6">F6</option>
+            <option value="F7">F7</option>
+            <option value="F9">F9</option>
+            <option value="F10">F10</option>
+            <option value="F12">F12</option>
+            <option value="F14">F14</option>
+            <option value="F17">F17</option>
+            <option value="F18">F18</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Condições de Saúde:</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" name="condition" value="HAS"> Hipertensão (HAS)</label>
+            <label><input type="checkbox" name="condition" value="DM"> Diabetes (DM)</label>
+            <label><input type="checkbox" name="condition" value="Cardíaco"> Cardíaco</label>
+            <label><input type="checkbox" name="condition" value="Asmático"> Asmático</label>
+            <label><input type="checkbox" name="condition" value="CA"> Câncer (CA)</label>
+            <label><input type="checkbox" name="condition" value="Ansiedade"> Ansiedade</label>
+            <label><input type="checkbox" name="condition" value="Renal"> Renal</label>
+            <label><input type="checkbox" name="condition" value="Depressão"> Depressão</label>
+            <label><input type="checkbox" name="condition" value="Trombose"> Trombose</label>
+            <label><input type="checkbox" name="condition" value="Hérnia"> Hérnia</label>
+            <label><input type="checkbox" name="condition" value="Epilepsia"> Epilepsia</label>
+            <label><input type="checkbox" name="condition" value="Tendinite"> Tendinite</label>
+            <label><input type="checkbox" name="condition" value="Psiquiátrico"> Psiquiátrico</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="medication">Medicação em uso:</label>
+          <input type="text" id="medication">
+        </div>
+        <div class="form-group">
+          <label for="pcd">PCD:</label>
+          <select id="pcd">
+            <option value="Não">Não</option>
+            <option value="Sim, Físico">Sim, Físico</option>
+            <option value="Sim, Visual">Sim, Visual</option>
+            <option value="Sim, Auditivo">Sim, Auditivo</option>
+            <option value="Sim, Intelectual">Sim, Intelectual</option>
+            <option value="Sim, Múltiplo">Sim, Múltiplo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Fumante:</label>
+          <div class="radio-group">
+            <label><input type="radio" name="smoker" value="Sim"> Sim</label>
+            <label><input type="radio" name="smoker" value="Não" checked> Não</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Etilista:</label>
+          <div class="radio-group">
+            <label><input type="radio" name="drinker" value="Sim"> Sim</label>
+            <label><input type="radio" name="drinker" value="Não" checked> Não</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="imc">IMC:</label>
+          <input type="number" id="imc" min="10" max="60" step="0.1" readonly>
+        </div>
+        <div class="form-group">
+          <label>Já fraturou alguma parte do corpo?</label>
+          <div class="radio-group">
+            <label><input type="radio" name="fractured" value="Sim"> Sim</label>
+            <label><input type="radio" name="fractured" value="Não" checked> Não</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="fracturedPart">Qual parte fraturou?</label>
+          <input type="text" id="fracturedPart">
+        </div>
+        <div class="form-group">
+          <label>Já esteve internado?</label>
+          <div class="radio-group">
+            <label><input type="radio" name="hospitalized" value="Sim"> Sim</label>
+            <label><input type="radio" name="hospitalized" value="Não" checked> Não</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="hospitalizationReason">Por qual motivo e há quanto tempo atrás?</label>
+          <input type="text" id="hospitalizationReason">
+        </div>
+        <div class="form-group">
+          <label for="lastCheckup">Quando fez o último check-up médico?</label>
+          <input type="text" id="lastCheckup">
+        </div>
+        <div class="form-group">
+          <label>Histórico Familiar (1º grau):</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" name="familyHistory" value="HAS"> HAS</label>
+            <input type="text" name="familyHasWho" placeholder="Quem?">
+            <label><input type="checkbox" name="familyHistory" value="DM"> DM</label>
+            <input type="text" name="familyDmWho" placeholder="Quem?">
+            <label><input type="checkbox" name="familyHistory" value="Cardíaco"> Cardíaco</label>
+            <input type="text" name="familyCardiacWho" placeholder="Quem?">
+            <label><input type="checkbox" name="familyHistory" value="CA"> Câncer (CA)</label>
+            <input type="text" name="familyCaWho" placeholder="Quem?">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="healthComplaint">Alguma queixa de saúde?</label>
+          <input type="text" id="healthComplaint">
+        </div>
+        <input type="hidden" id="employeeId" value="">
+        <button type="submit">Salvar</button>
+      </form>
+    </div>
+  </div>
+  
+  <div id="deleteModal" class="modal">
+    <div class="modal-content delete-modal">
+      <h2>Confirmar Exclusão</h2>
+      <p>Tem certeza que deseja excluir este funcionário?</p>
+      <div class="modal-actions">
+        <button id="confirmDelete" class="btn-danger">Excluir</button>
+        <button id="cancelDelete">Cancelar</button>
+      </div>
+    </div>
+  </div>
+  
+  <footer>
+    <p>© 2025 Dashboard de Indicadores de Saúde</p>
+  </footer>
+  
+  <script src="script.js"></script>
 </body>
 </html>
