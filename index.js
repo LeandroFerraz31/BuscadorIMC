@@ -14,10 +14,8 @@ console.log('Ambiente detectado:', isSquareCloud ? 'Square Cloud' : 'Local');
 console.log('Porta:', PORT, 'Host:', HOST);
 
 // Configurar caminho do banco de dados
-const storageDir = isSquareCloud ? '/app/storage' : __dirname;
-const dbPath = isSquareCloud
-  ? '/app/storage/employees.db'
-  : path.join(__dirname, 'employees.db');
+const storageDir = path.join(__dirname, 'storage');
+const dbPath = path.join(storageDir, 'employees.db');
 console.log('Caminho do banco:', dbPath);
 
 // Verificar permissões do diretório no Square Cloud
@@ -25,11 +23,9 @@ if (isSquareCloud) {
   try {
     // Verificar se o diretório existe
     if (!fs.existsSync(storageDir)) {
-  console.warn('Diretório /app/storage não existe. Criando...');
-  fs.mkdirSync(storageDir, { recursive: true });
-  console.log('Diretório /app/storage criado com sucesso.');
-}
-
+      console.error('Diretório /app/storage não existe.');
+      process.exit(1);
+    }
 
     // Verificar permissões de escrita
     const testFile = path.join(storageDir, 'test-write-permissions.txt');
