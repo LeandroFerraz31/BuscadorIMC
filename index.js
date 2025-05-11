@@ -5,20 +5,26 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const PORT = process.env.SQUARE_CLOUD ? 80 : 3000; // Porta 80 no Square Cloud, 3000 localmente
-const HOST = process.env.SQUARE_CLOUD ? '0.0.0.0' : 'localhost'; // Host 0.0.0.0 no Square Cloud, localhost localmente
+const isSquareCloud = process.env.SQUARE_CLOUD || process.env.HOSTNAME?.includes('squarecloud') || process.env.PORT === '80';
+const PORT = isSquareCloud ? 80 : 3000;
+const HOST = isSquareCloud ? '0.0.0.0' : 'localhost';
+
+// Verificar o ambiente
+console.log('Ambiente detectado:', isSquareCloud ? 'Square Cloud' : 'Local');
+console.log('Porta:', PORT, 'Host:', HOST);
 
 // Configurar caminho do banco de dados
-const storageDir = process.env.SQUARE_CLOUD ? '/app/storage' : __dirname;
-if (process.env.SQUARE_CLOUD && !fs.existsSync(storageDir)) {
+const storageDir = isSquareCloud ? '/app/storage' : __dirname;
+if (isSquareCloud && !fs.existsSync(storageDir)) {
   fs.mkdirSync(storageDir, { recursive: true });
   console.log('Diretório /app/storage criado.');
 }
-const dbPath = process.env.SQUARE_CLOUD
+const dbPath = isSquareCloud
   ? '/app/storage/employees.db'
   : path.join(__dirname, 'employees.db');
 console.log('Caminho do banco:', dbPath);
 
+// Inicializar o banco de dados
 const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
   if (err) {
     console.error('Erro ao abrir/criar banco:', err.message);
@@ -27,7 +33,7 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
   console.log('Conectado ao banco SQLite em', dbPath);
 });
 
-// Função para criar a tabela e adicionar colunas de forma sequencial
+// Função para criar a tabela
 function initializeDatabase() {
   return new Promise((resolve, reject) => {
     const createTableSQL = `CREATE TABLE IF NOT EXISTS employees (
@@ -63,18 +69,32 @@ function initializeDatabase() {
   });
 }
 
+// Função para verificar se uma coluna existe
+function checkColumnExists(column) {
+  return new Promise((resolve) => {
+    db.all(`PRAGMA table_info(employees)`, (err, rows) => {
+      if (err) {
+        console.error(`Erro ao verificar colunas: ${err.message}`);
+        return resolve(false);
+      }
+      const columnExists = rows.some(row => row.name === column);
+      resolve(columnExists);
+    });
+  });
+}
+
 // Função para adicionar colunas, se necessário
 function addColumnIfNotExists(column, type) {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
+    const columnExists = await checkColumnExists(column);
+    if (columnExists) {
+      console.log(`Coluna ${column} já existe`);
+      return resolve();
+    }
     db.run(`ALTER TABLE employees ADD COLUMN ${column} ${type}`, (err) => {
       if (err) {
-        if (err.message.includes('duplicate column name')) {
-          console.log(`Coluna ${column} já existente`);
-          resolve();
-        } else {
-          console.error(`Erro ao adicionar coluna ${column}:`, err.message);
-          reject(err);
-        }
+        console.error(`Erro ao adicionar coluna ${column}:`, err.message);
+        reject(err);
       } else {
         console.log(`Coluna ${column} adicionada`);
         resolve();
@@ -105,6 +125,7 @@ async function setupDatabase() {
     console.log('Inicialização do banco de dados concluída');
   } catch (err) {
     console.error('Erro na inicialização do banco de dados:', err.message);
+    process.exit(1);
   }
 }
 
@@ -113,7 +134,7 @@ setupDatabase();
 
 // Configurar Express
 app.use(cors({
-  origin: process.env.SQUARE_CLOUD ? 'https://buscaativadesaude.squareweb.app' : 'http://localhost:3000',
+  origin: isSquareCloud ? 'https://buscaativadesaude.squareweb.app' : 'http://localhost:3000',
   methods: ['GET', 'POST', 'DELETE', 'PUT'],
   allowedHeaders: ['Content-Type']
 }));
@@ -184,7 +205,7 @@ app.get('/api/health', (req, res) => {
   db.get('SELECT 1', (err) => {
     if (err) {
       console.error('Erro no health check:', err.message);
-      return res.status(500).json({ status: 'error', message: 'Database unavailable' });
+      return res.status(500).json({ error: 'Database unavailable' });
     }
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
