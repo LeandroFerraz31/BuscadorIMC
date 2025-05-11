@@ -1,4 +1,4 @@
-const API_BASE_URL = window.location.hostname.includes('squareweb.app') 
+const API_BASE_URL = window.location.hostname.includes('squarecloud.app') 
     ? window.location.origin 
     : 'http://localhost:80';
 
