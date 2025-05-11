@@ -5,8 +5,7 @@ employees.db
 # Local Netlify folder
 .netlify
 
-# Arquivos de configuração do Square Cloud
-squarecloud.app
+
 
 # Arquivos temporários
 *.zip

@@ -1,0 +1,10 @@
+APP_NAME=dashboard-saude
+TYPE=web
+VERSION=nodejs
+MAIN=index.js
+START=node index.js
+MEMORY=1024
+AUTORESTART=true
+NODE_VERSION=18
+STORAGE=/app/storage
+PRE_START=touch /app/storage/employees.db
