@@ -2,9 +2,7 @@
  * Configuração da URL base da API, ajustada para ambiente local ou produção.
  * @constant {string} API_BASE_URL - URL da API (localhost:3000 localmente ou domínio do Square Cloud em produção).
  */
-const API_BASE_URL = window.location.hostname.includes('squareweb.app')
-  ? window.location.origin
-  : 'http://localhost:3000';
+const API_BASE_URL = window.location.origin;
 console.log('API_BASE_URL definido como:', API_BASE_URL);
 
 /**

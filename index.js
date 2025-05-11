@@ -15,14 +15,13 @@ const HOST = isSquareCloud ? '0.0.0.0' : 'localhost';
 
 // Configurar CORS para permitir o domínio do Square Cloud
 app.use(cors({
-  origin: isSquareCloud ? [
+  origin: [
     'https://buscaativadesaude.squareweb.app',
-    'https://your-app-name.squareweb.app' // substitua pelo seu domínio
-  ] : 'http://localhost:3000',
+    'https://buscaativadesaude.squareweb.app/' // substitua pelo seu domínio real
+  ],
   methods: ['GET', 'POST', 'DELETE', 'PUT'],
   allowedHeaders: ['Content-Type']
 }));
-
 // Servir arquivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
