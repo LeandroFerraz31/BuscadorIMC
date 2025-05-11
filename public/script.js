@@ -32,10 +32,12 @@ let currentDeleteId = null;
  * Carrega os dados dos funcionários da API e atualiza a interface.
  * @async
  */
-// script.js, por volta da linha 40
+// ...existing code...
+
+// Atualizado: fetchEmployees agora atualiza os dados globais e renderiza a interface
 async function fetchEmployees() {
   try {
-    const response = await fetch('http://localhost:3000/api/employees', {
+    const response = await fetch(`${API_BASE_URL}/api/employees`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -45,15 +47,325 @@ async function fetchEmployees() {
       throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
     }
     const data = await response.json();
-    return data; // Prossegue com os dados dos funcionários
+    employeesData = data;
+    filteredData = [...data];
+    renderTable();
+    renderSummaryCards();
+    populateEmployeeSuggestions();
+    populateBranchFilter();
+    renderHealthConditionsChart();
+    renderImcChart();
+    renderHabitsChart();
+    return data;
   } catch (error) {
     console.error('Erro ao buscar funcionários:', error.message);
-    // Exibe mensagem no DOM ou alerta para o usuário
     const errorElement = document.createElement('div');
     errorElement.style.color = 'red';
     errorElement.textContent = 'Não foi possível carregar os funcionários. Verifique se o servidor está ativo.';
     document.body.prepend(errorElement);
-    return []; // Retorna array vazio para evitar quebras no app
+    employeesData = [];
+    filteredData = [];
+    renderTable();
+    renderSummaryCards();
+    renderHealthConditionsChart();
+    renderImcChart();
+    renderHabitsChart();
+    return [];
+  }
+}
+
+// NOVA: Função para aplicar filtros de funcionário e filial
+function applyFilters() {
+  const employeeName = employeeFilter.value;
+  const branch = document.getElementById('branchFilter').value;
+  filteredData = employeesData.filter(emp => {
+    const matchName = employeeName === 'all' || emp.name === employeeName;
+    const matchBranch = branch === 'all' || emp.branch === branch;
+    return matchName && matchBranch;
+  });
+  renderTable();
+  renderSummaryCards();
+  renderHealthConditionsChart();
+  renderImcChart();
+  renderHabitsChart();
+}
+
+// Ajuste: Após adicionar ou excluir funcionário, atualize os dados e filtros
+const addNewEmployee = async () => {
+  // ...existing code...
+  try {
+    const url = `${API_BASE_URL}/api/employees`;
+    // ...existing code...
+    await fetchEmployees();
+    applyFilters();
+  } catch (error) {
+    // ...existing code...
+  }
+};
+
+const deleteEmployee = async (index) => {
+  // ...existing code...
+    await fetchEmployees();
+    applyFilters();
+    deleteModal.style.display = 'none';
+  // ...existing code...
+};
+
+// Removida duplicidade: mantenha apenas esta versão de initApp
+const initApp = () => {
+  console.log('Inicializando aplicativo');
+  fetchEmployees();
+
+  // Alternância de abas
+  document.querySelectorAll('.tab-btn').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      document.getElementById(`${tab.getAttribute('data-tab')}-content`).classList.add('active');
+    });
+  });
+
+  // Abrir modal para adicionar funcionário
+  addDataBtn.addEventListener('click', () => {
+    employeeForm.reset();
+    document.getElementById('employeeId').value = '';
+    modal.style.display = 'block';
+  });
+
+  // Fechar modais
+  closeBtn.addEventListener('click', () => modal.style.display = 'none');
+  window.addEventListener('click', (event) => {
+    if (event.target === modal) modal.style.display = 'none';
+    if (event.target === deleteModal) deleteModal.style.display = 'none';
+  });
+
+  // Aplicar filtros dos gráficos
+  document.getElementById('applyHealthFilter').addEventListener('click', renderHealthConditionsChart);
+  document.getElementById('applyImcFilter').addEventListener('click', renderImcChart);
+  document.getElementById('applyHabitsFilter').addEventListener('click', renderHabitsChart);
+
+  // Filtros de funcionário e filial
+  employeeFilter.addEventListener('change', applyFilters);
+  employeeFilter.addEventListener('keyup', (e) => {
+    if (e.key === 'Enter') applyFilters();
+  });
+  document.getElementById('branchFilter').addEventListener('change', applyFilters);
+
+  // Exportação de dados
+  exportBtn.addEventListener('click', exportData);
+
+  // Confirmação de exclusão
+  confirmDeleteBtn.addEventListener('click', () => deleteEmployee(currentDeleteId));
+  cancelDeleteBtn.addEventListener('click', () => deleteModal.style.display = 'none');
+
+  // Submissão do formulário
+  employeeForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    addNewEmployee();
+  });
+
+  // Cálculo automático do IMC
+  const weightInput = document.getElementById('weight');
+  const heightInput = document.getElementById('height');
+  weightInput.addEventListener('input', calculateIMC);
+  heightInput.addEventListener('input', calculateIMC);
+
+  // Redesenhar gráficos ao redimensionar a janela
+  window.addEventListener('resize', () => {
+    renderHealthConditionsChart();
+    renderImcChart();
+    renderHabitsChart();
+  });
+};
+
+document.addEventListener('DOMContentLoaded', initApp);
+
+// ...existing code...// ...existing code...
+
+// Atualizado: fetchEmployees agora atualiza os dados globais e renderiza a interface
+async function fetchEmployees() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/employees`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
+    }
+    const data = await response.json();
+    employeesData = data;
+    filteredData = [...data];
+    renderTable();
+    renderSummaryCards();
+    populateEmployeeSuggestions();
+    populateBranchFilter();
+    renderHealthConditionsChart();
+    renderImcChart();
+    renderHabitsChart();
+    return data;
+  } catch (error) {
+    console.error('Erro ao buscar funcionários:', error.message);
+    const errorElement = document.createElement('div');
+    errorElement.style.color = 'red';
+    errorElement.textContent = 'Não foi possível carregar os funcionários. Verifique se o servidor está ativo.';
+    document.body.prepend(errorElement);
+    employeesData = [];
+    filteredData = [];
+    renderTable();
+    renderSummaryCards();
+    renderHealthConditionsChart();
+    renderImcChart();
+    renderHabitsChart();
+    return [];
+  }
+}
+
+// NOVA: Função para aplicar filtros de funcionário e filial
+function applyFilters() {
+  const employeeName = employeeFilter.value;
+  const branch = document.getElementById('branchFilter').value;
+  filteredData = employeesData.filter(emp => {
+    const matchName = employeeName === 'all' || emp.name === employeeName;
+    const matchBranch = branch === 'all' || emp.branch === branch;
+    return matchName && matchBranch;
+  });
+  renderTable();
+  renderSummaryCards();
+  renderHealthConditionsChart();
+  renderImcChart();
+  renderHabitsChart();
+}
+
+// Ajuste: Após adicionar ou excluir funcionário, atualize os dados e filtros
+const addNewEmployee = async () => {
+  // ...existing code...
+  try {
+    const url = `${API_BASE_URL}/api/employees`;
+    // ...existing code...
+    await fetchEmployees();
+    applyFilters();
+  } catch (error) {
+    // ...existing code...
+  }
+};
+
+const deleteEmployee = async (index) => {
+  // ...existing code...
+    await fetchEmployees();
+    applyFilters();
+    deleteModal.style.display = 'none';
+  // ...existing code...
+};
+
+// Removida duplicidade: mantenha apenas esta versão de initApp
+const initApp = () => {
+  console.log('Inicializando aplicativo');
+  fetchEmployees();
+
+  // Alternância de abas
+  document.querySelectorAll('.tab-btn').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      document.getElementById(`${tab.getAttribute('data-tab')}-content`).classList.add('active');
+    });
+  });
+
+  // Abrir modal para adicionar funcionário
+  addDataBtn.addEventListener('click', () => {
+    employeeForm.reset();
+    document.getElementById('employeeId').value = '';
+    modal.style.display = 'block';
+  });
+
+  // Fechar modais
+  closeBtn.addEventListener('click', () => modal.style.display = 'none');
+  window.addEventListener('click', (event) => {
+    if (event.target === modal) modal.style.display = 'none';
+    if (event.target === deleteModal) deleteModal.style.display = 'none';
+  });
+
+  // Aplicar filtros dos gráficos
+  document.getElementById('applyHealthFilter').addEventListener('click', renderHealthConditionsChart);
+  document.getElementById('applyImcFilter').addEventListener('click', renderImcChart);
+  document.getElementById('applyHabitsFilter').addEventListener('click', renderHabitsChart);
+
+  // Filtros de funcionário e filial
+  employeeFilter.addEventListener('change', applyFilters);
+  employeeFilter.addEventListener('keyup', (e) => {
+    if (e.key === 'Enter') applyFilters();
+  });
+  document.getElementById('branchFilter').addEventListener('change', applyFilters);
+
+  // Exportação de dados
+  exportBtn.addEventListener('click', exportData);
+
+  // Confirmação de exclusão
+  confirmDeleteBtn.addEventListener('click', () => deleteEmployee(currentDeleteId));
+  cancelDeleteBtn.addEventListener('click', () => deleteModal.style.display = 'none');
+
+  // Submissão do formulário
+  employeeForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    addNewEmployee();
+  });
+
+  // Cálculo automático do IMC
+  const weightInput = document.getElementById('weight');
+  const heightInput = document.getElementById('height');
+  weightInput.addEventListener('input', calculateIMC);
+  heightInput.addEventListener('input', calculateIMC);
+
+  // Redesenhar gráficos ao redimensionar a janela
+  window.addEventListener('resize', () => {
+    renderHealthConditionsChart();
+    renderImcChart();
+    renderHabitsChart();
+  });
+};
+
+document.addEventListener('DOMContentLoaded', initApp);
+
+// ...existing code...async function fetchEmployees() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/employees`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
+    }
+    const data = await response.json();
+    employeesData = data;
+    filteredData = [...data];
+    renderTable();
+    renderSummaryCards();
+    populateEmployeeSuggestions();
+    populateBranchFilter();
+    renderHealthConditionsChart();
+    renderImcChart();
+    renderHabitsChart();
+    return data;
+  } catch (error) {
+    console.error('Erro ao buscar funcionários:', error.message);
+    const errorElement = document.createElement('div');
+    errorElement.style.color = 'red';
+    errorElement.textContent = 'Não foi possível carregar os funcionários. Verifique se o servidor está ativo.';
+    document.body.prepend(errorElement);
+    employeesData = [];
+    filteredData = [];
+    renderTable();
+    renderSummaryCards();
+    renderHealthConditionsChart();
+    renderImcChart();
+    renderHabitsChart();
+    return [];
   }
 }
 
@@ -309,47 +621,6 @@ const renderHabitsChart = () => {
 };
 
 /**
- * Renderiza todos os gráficos (Condições de Saúde, IMC, Hábitos).
- */// script.js, por volta da linha 312
-async function renderCharts() {
-  console.log('Renderizando gráficos');
-  try {
-    const response = await fetch('https://buscaativadesaude.squareweb.app/api/charts', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      timeout: 10000, // Timeout de 10 segundos (se o navegador suportar)
-    });
-    if (response.status === 408) {
-      console.warn('Timeout na requisição. Tentando novamente...');
-      // Tenta novamente após 2 segundos
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      return renderCharts(); // Rechama a função
-    }
-    if (!response.ok) {
-      throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
-    }
-    const chartData = await response.json();
-    // Prossegue com a renderização dos gráficos
-    renderChartToDOM(chartData); // Supondo que existe uma função para renderizar
-  } catch (error) {
-    console.error('Erro ao renderizar gráficos:', error.message);
-    // Exibe mensagem no DOM
-    const errorElement = document.createElement('div');
-    errorElement.style.color = 'red';
-    errorElement.textContent = 'Erro ao carregar os gráficos. Tente novamente mais tarde.';
-    document.body.prepend(errorElement);
-  }
-}
-
-// Exemplo de função placeholder para renderizar gráficos
-function renderChartToDOM(data) {
-  // Implementação da renderização (substitua pelo seu código real)
-  console.log('Dados do gráfico:', data);
-}
-
-/**
  * Popula a lista de sugestões de nomes de funcionários no filtro.
  */
 const populateEmployeeSuggestions = () => {
@@ -447,6 +718,7 @@ const deleteEmployee = async (index) => {
     });
     if (!response.ok) throw new Error(`Erro ao excluir: ${response.status}`);
     await fetchEmployees();
+    applyFilters();
     deleteModal.style.display = 'none';
   } catch (error) {
     console.error('Erro ao excluir:', error);
@@ -530,6 +802,7 @@ const addNewEmployee = async () => {
     employeeForm.reset();
     document.getElementById('employeeId').value = '';
     await fetchEmployees();
+    applyFilters();
   } catch (error) {
     console.error('Erro ao adicionar:', error);
     alert(`Erro ao salvar funcionário. Certifique-se de que o servidor está rodando. Detalhes: ${error.message}`);
@@ -585,26 +858,20 @@ const exportData = () => {
 
 /**
  * Aplica os filtros de funcionário e filial à tabela e gráficos.
- */// script.js, por volta da linha 590
-async function initApp() {
-  console.log('Inicializando aplicativo');
-  const employees = await fetchEmployees();
-  if (employees.length > 0) {
-    // Prossegue com a lógica do app
-    console.log('Funcionários carregados:', employees);
-    // Exemplo: renderizar lista de funcionários
-    renderEmployees(employees); // Substitua pela sua função
-  } else {
-    console.warn('Nenhum funcionário carregado.');
-  }
-  // Chama renderização de gráficos
-  await renderCharts();
-}
-
-// Exemplo de função placeholder para renderizar funcionários
-function renderEmployees(employees) {
-  // Implementação da renderização (substitua pelo seu código real)
-  console.log('Renderizando funcionários:', employees);
+ */
+function applyFilters() {
+  const employeeName = employeeFilter.value;
+  const branch = document.getElementById('branchFilter').value;
+  filteredData = employeesData.filter(emp => {
+    const matchName = employeeName === 'all' || emp.name === employeeName;
+    const matchBranch = branch === 'all' || emp.branch === branch;
+    return matchName && matchBranch;
+  });
+  renderTable();
+  renderSummaryCards();
+  renderHealthConditionsChart();
+  renderImcChart();
+  renderHabitsChart();
 }
 
 /**
@@ -626,7 +893,6 @@ const initApp = () => {
 
   // Abrir modal para adicionar funcionário
   addDataBtn.addEventListener('click', () => {
-    console.log('Abrindo modal para adicionar funcionário');
     employeeForm.reset();
     document.getElementById('employeeId').value = '';
     modal.style.display = 'block';
@@ -671,7 +937,11 @@ const initApp = () => {
   heightInput.addEventListener('input', calculateIMC);
 
   // Redesenhar gráficos ao redimensionar a janela
-  window.addEventListener('resize', renderCharts);
+  window.addEventListener('resize', () => {
+    renderHealthConditionsChart();
+    renderImcChart();
+    renderHabitsChart();
+  });
 };
 
 /**
