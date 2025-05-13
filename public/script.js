@@ -1,14 +1,13 @@
-const API_BASE_URL = window.location.hostname.includes('squarecloud.app') 
-    ? window.location.origin 
-    : 'http://localhost:80';
+const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:80'
+    : '';
 
 console.log('Hostname:', window.location.hostname);
 console.log('API_BASE_URL definido como:', API_BASE_URL);
 
-// Restante do código do script.js (adicionar o código existente aqui)
-
 let employeesData = [];
 let filteredData = [];
+// ... resto do código ...
 
 const dataTable = document.getElementById('dataTable');
 const addDataBtn = document.getElementById('addDataBtn');
@@ -469,7 +468,7 @@ const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Funcionários');
-    XLSX.write(workbook, 'funcionarios_saude.xlsx');
+    XLSX.writeFile(workbook, 'funcionarios_saude.xlsx'); // Corrigido para writeFile
 };
 
 const applyFilters = () => {
