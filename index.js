@@ -81,11 +81,20 @@ app.get('/api/employees', (req, res) => {
             res.status(500).json({ error: 'Erro ao buscar dados' });
             return;
         }
-        const employees = rows.map(row => ({
-            ...row,
-            conditions: row.conditions ? JSON.parse(row.conditions) : [],
-            familyHistory: row.familyHistory ? JSON.parse(row.familyHistory) : {}
-        }));
+        const employees = rows.map(row => {
+            let parsedFamilyHistory = {};
+            try {
+                parsedFamilyHistory = row.familyHistory ? JSON.parse(row.familyHistory) : {};
+                console.log(`Funcionário ID ${row.id} - familyHistory:`, parsedFamilyHistory); // Log para depuração
+            } catch (parseErr) {
+                console.error(`Erro ao parsear familyHistory para ID ${row.id}:`, parseErr.message);
+            }
+            return {
+                ...row,
+                conditions: row.conditions ? JSON.parse(row.conditions) : [],
+                familyHistory: parsedFamilyHistory
+            };
+        });
         res.json(employees);
     });
 });
@@ -99,11 +108,25 @@ app.post('/api/employees', (req, res) => {
         hospitalizationReason, lastCheckup, familyHistory, healthComplaint, id
     } = req.body;
 
+    // Validar familyHistory
+    let familyHistoryJson = '{}';
+    if (familyHistory && typeof familyHistory === 'object') {
+        try {
+            familyHistoryJson = JSON.stringify(familyHistory);
+            console.log('familyHistory salvo:', familyHistoryJson); // Log para depuração
+        } catch (err) {
+            console.error('Erro ao serializar familyHistory:', err.message);
+            res.status(400).json({ error: 'Formato inválido para familyHistory' });
+            return;
+        }
+    } else {
+        console.warn('familyHistory inválido, usando {}:', familyHistory);
+    }
+
     // Calcular IMC
     const imc = height > 0 ? (weight / (height * height)).toFixed(1) : 0;
 
     const conditionsJson = JSON.stringify(conditions || []);
-    const familyHistoryJson = JSON.stringify(familyHistory || {});
 
     if (id) {
         // Atualizar funcionário existente
