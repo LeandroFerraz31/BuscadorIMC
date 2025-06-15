@@ -23,8 +23,21 @@ const calculateIMC = () => {
     document.getElementById('imc').value = imc;
 };
 
+const toggleFamilyWho = () => {
+    document.querySelectorAll('input[name="familyHistory"]').forEach(checkbox => {
+        const condition = checkbox.value;
+        const whoDiv = document.querySelector(`.family-who[data-condition="${condition}"]`);
+        if (whoDiv) {
+            whoDiv.style.display = checkbox.checked ? 'block' : 'none';
+        }
+    });
+};
+
 document.getElementById('weight').addEventListener('input', calculateIMC);
 document.getElementById('height').addEventListener('input', calculateIMC);
+document.querySelectorAll('input[name="familyHistory"]').forEach(checkbox => {
+    checkbox.addEventListener('change', toggleFamilyWho);
+});
 
 async function fetchEmployees() {
     try {
@@ -82,21 +95,21 @@ const renderTable = () => {
             .join('; ');
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${employee.name}</td>
+            <td>${employee.name || ''}</td>
             <td>${employee.age || 'N/A'}</td>
             <td>${employee.weight || 'N/A'}</td>
             <td>${employee.height || 'N/A'}</td>
-            <td>${employee.sector}</td>
+            <td>${employee.sector || ''}</td>
             <td>${employee.branch || 'N/A'}</td>
-            <td>${employee.conditions.join(', ')}</td>
+            <td>${employee.conditions?.join(', ') || 'Nenhuma'}</td>
             <td>${employee.medication || 'Nenhuma'}</td>
-            <td>${employee.pcd}</td>
-            <td>${employee.smoker}</td>
-            <td>${employee.drinker}</td>
-            <td>${employee.imc}</td>
-            <td>${employee.fractured}</td>
+            <td>${employee.pcd || 'Não'}</td>
+            <td>${employee.smoker || 'Não'}</td>
+            <td>${employee.drinker || 'Não'}</td>
+            <td>${employee.imc || 'N/A'}</td>
+            <td>${employee.fractured || 'Não'}</td>
             <td>${employee.fracturedPart || 'N/A'}</td>
-            <td>${employee.hospitalized}</td>
+            <td>${employee.hospitalized || 'Não'}</td>
             <td>${employee.hospitalizationReason || 'N/A'}</td>
             <td>${employee.lastCheckup || 'N/A'}</td>
             <td>${familyHistoryStr || 'Nenhum'}</td>
@@ -279,11 +292,9 @@ const renderCharts = () => {
 const populateEmployeeSuggestions = () => {
     const datalist = document.getElementById('employeeSuggestions');
     datalist.innerHTML = '<option value="all">Todos os Funcionários</option>';
-
     employeesData.forEach(employee => {
         const option = document.createElement('option');
         option.value = employee.name;
-        option.textContent = employee.name;
         datalist.appendChild(option);
     });
 };
@@ -291,37 +302,35 @@ const populateEmployeeSuggestions = () => {
 const populateBranchFilter = () => {
     const branchFilter = document.getElementById('branchFilter');
     branchFilter.innerHTML = '<option value="all">Todas as Unidades</option>';
-
-    const uniqueBranches = [...new Set(employeesData.map(employee => employee.branch).filter(Boolean))];
+    const uniqueBranches = [...new Set(employeesData.map(e => e.branch).filter(Boolean))];
     uniqueBranches.forEach(branch => {
         const option = document.createElement('option');
         option.value = branch;
-        option.textContent = branch;
         branchFilter.appendChild(option);
     });
 };
 
 const editEmployee = index => {
     const employee = filteredData[index];
-    document.getElementById('name').value = employee.name;
+    document.getElementById('name').value = employee.name || '';
     document.getElementById('age').value = employee.age || '';
     document.getElementById('weight').value = employee.weight || '';
     document.getElementById('height').value = employee.height || '';
-    document.getElementById('sector').value = employee.sector;
+    document.getElementById('sector').value = employee.sector || '';
     document.getElementById('branch').value = employee.branch || '';
     document.querySelectorAll('input[name="condition"]').forEach(checkbox => checkbox.checked = false);
-    employee.conditions.forEach(condition => {
+    (employee.conditions || []).forEach(condition => {
         const checkbox = document.querySelector(`input[name="condition"][value="${condition}"]`);
         if (checkbox) checkbox.checked = true;
     });
     document.getElementById('medication').value = employee.medication || '';
-    document.getElementById('pcd').value = employee.pcd;
-    document.querySelectorAll('input[name="smoker"]').forEach(radio => radio.checked = radio.value === employee.smoker);
-    document.querySelectorAll('input[name="drinker"]').forEach(radio => radio.checked = radio.value === employee.drinker);
-    document.getElementById('imc').value = employee.imc;
-    document.querySelectorAll('input[name="fractured"]').forEach(radio => radio.checked = radio.value === employee.fractured);
+    document.getElementById('pcd').value = employee.pcd || 'Não';
+    document.querySelectorAll('input[name="smoker"]').forEach(radio => radio.checked = radio.value === (employee.smoker || 'Não'));
+    document.querySelectorAll('input[name="drinker"]').forEach(radio => radio.checked = radio.value === (employee.drinker || 'Não'));
+    document.getElementById('imc').value = employee.imc || '';
+    document.querySelectorAll('input[name="fractured"]').forEach(radio => radio.checked = radio.value === (employee.fractured || 'Não'));
     document.getElementById('fracturedPart').value = employee.fracturedPart || '';
-    document.querySelectorAll('input[name="hospitalized"]').forEach(radio => radio.checked = radio.value === employee.hospitalized);
+    document.querySelectorAll('input[name="hospitalized"]').forEach(radio => radio.checked = radio.value === (employee.hospitalized || 'Não'));
     document.getElementById('hospitalizationReason').value = employee.hospitalizationReason || '';
     document.getElementById('lastCheckup').value = employee.lastCheckup || '';
     document.querySelectorAll('input[name="familyHistory"]').forEach(checkbox => checkbox.checked = false);
@@ -339,8 +348,9 @@ const editEmployee = index => {
         });
     }
     document.getElementById('healthComplaint').value = employee.healthComplaint || '';
-    document.getElementById('employeeId').value = employee.id;
+    document.getElementById('employeeId').value = employee.id || '';
     calculateIMC();
+    toggleFamilyWho();
     modal.style.display = 'block';
 };
 
@@ -352,9 +362,7 @@ const showDeleteConfirmation = index => {
 const deleteEmployee = async index => {
     const employee = filteredData[index];
     try {
-        const response = await fetch(`${API_BASE_URL}/api/employees/${employee.id}`, {
-            method: 'DELETE'
-        });
+        const response = await fetch(`${API_BASE_URL}/api/employees/${employee.id}`, { method: 'DELETE' });
         if (!response.ok) throw new Error(`Erro ao excluir: ${response.status}`);
         await fetchEmployees();
         deleteModal.style.display = 'none';
@@ -364,15 +372,15 @@ const deleteEmployee = async index => {
 };
 
 const addNewEmployee = async () => {
-    const name = document.getElementById('name').value;
+    const name = document.getElementById('name').value || '';
     const age = parseInt(document.getElementById('age').value) || null;
     const weight = parseFloat(document.getElementById('weight').value) || null;
     const height = parseFloat(document.getElementById('height').value) || null;
-    const sector = document.getElementById('sector').value;
-    const branch = document.getElementById('branch').value;
-    const conditions = Array.from(document.querySelectorAll('input[name="condition"]:checked')).map(el => el.value);
+    const sector = document.getElementById('sector').value || '';
+    const branch = document.getElementById('branch').value || '';
+    const conditions = Array.from(document.querySelectorAll('input[name="condition"]:checked')).map(el => el.value) || [];
     const medication = document.getElementById('medication').value || '';
-    const pcd = document.getElementById('pcd').value;
+    const pcd = document.getElementById('pcd').value || 'Não';
     const smoker = document.querySelector('input[name="smoker"]:checked')?.value || 'Não';
     const drinker = document.querySelector('input[name="drinker"]:checked')?.value || 'Não';
     const imc = height > 0 ? (weight / (height * height)).toFixed(1) : 0;
@@ -385,14 +393,14 @@ const addNewEmployee = async () => {
     const familyHistory = {};
     familyHistoryCheckboxes.forEach(checkbox => {
         const condition = checkbox.value;
-        const who = Array.from(document.querySelectorAll(`input[name="family${condition}Who"]:checked`)).map(el => el.value);
-        familyHistory[condition] = who;
+        const who = Array.from(document.querySelectorAll(`input[name="family${condition}Who"]:checked`)).map(el => el.value) || [];
+        familyHistory[condition] = who.length > 0 ? who : [];
     });
     const healthComplaint = document.getElementById('healthComplaint').value || '';
-    const employeeId = document.getElementById('employeeId').value;
+    const employeeId = document.getElementById('employeeId').value || '';
 
-    if (!name || !sector || !branch || !weight || !height || !age) {
-        alert('Preencha todos os campos obrigatórios (Nome, Idade, Setor, Filial, Peso, Altura).');
+    if (!name || !sector) {
+        alert('Preencha os campos obrigatórios (Nome, Setor).');
         return;
     }
 
@@ -427,7 +435,7 @@ const exportToExcel = () => {
         Altura: employee.height,
         Setor: employee.sector,
         Filial: employee.branch,
-        Patologia: employee.conditions.join(', '),
+        Patologia: employee.conditions?.join(', ') || 'Nenhuma',
         Medicação: employee.medication || 'Nenhuma',
         PCD: employee.pcd,
         Fumante: employee.smoker,
@@ -439,7 +447,7 @@ const exportToExcel = () => {
         'Motivo Internação': employee.hospitalizationReason || 'N/A',
         'Último Check-up': employee.lastCheckup || 'N/A',
         'Histórico Familiar': Object.entries(employee.familyHistory || {})
-            .filter(([condition, who]) => Array.isArray(who) && who.length > 0)
+            .filter(([_, who]) => Array.isArray(who) && who.length > 0)
             .map(([condition, who]) => `${condition}: ${who.join(', ')}`)
             .join('; ') || 'Nenhum',
         'Queixa de Saúde': employee.healthComplaint || 'Nenhuma'
@@ -456,8 +464,8 @@ const applyFilters = () => {
     const selectedBranch = branchFilter.value;
 
     filteredData = employeesData.filter(employee => {
-        const matchesName = employeeName === 'all' || employee.name.toLowerCase().includes(employeeName);
-        const matchesBranch = selectedBranch === 'all' || employee.branch === selectedBranch;
+        const matchesName = employeeName === 'all' || (employee.name && employee.name.toLowerCase().includes(employeeName));
+        const matchesBranch = selectedBranch === 'all' || (employee.branch && employee.branch === selectedBranch);
         return matchesName && matchesBranch;
     });
 
@@ -522,7 +530,6 @@ const initApp = () => {
     });
 };
 
-// Função para debounce
 const debounce = (func, delay) => {
     let timeoutId;
     return (...args) => {
