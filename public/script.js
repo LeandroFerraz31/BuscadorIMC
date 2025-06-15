@@ -493,7 +493,7 @@ const initApp = () => {
 
     exportBtn.addEventListener('click', exportToExcel);
 
-    employeeFilter.addEventListener('input', applyFilters);
+    employeeFilter.addEventListener('input', debounce(applyFilters, 300));
     branchFilter.addEventListener('change', applyFilters);
 
     confirmDeleteBtn.addEventListener('click', async () => {
@@ -520,6 +520,15 @@ const initApp = () => {
             document.getElementById(`${btn.getAttribute('data-tab')}-content`).classList.add('active');
         });
     });
+};
+
+// Função para debounce
+const debounce = (func, delay) => {
+    let timeoutId;
+    return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(null, args), delay);
+    };
 };
 
 window.onload = initApp;
