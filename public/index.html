@@ -291,62 +291,54 @@
                     <input type="text" id="lastCheckup">
                 </div>
                 <div class="form-group">
-    <label>Histórico Familiar (1º grau):</label>
-    <div class="checkbox-group">
-        <label><input type="checkbox" name="familyHistory" value="HAS"> HAS</label>
-        <select name="familyHASWho">
-            <option value="">Nenhum</option>
-            <option value="Pai">Pai</option>
-            <option value="Mãe">Mãe</option>
-        </select>
-        <label><input type="checkbox" name="familyHistory" value="DM"> DM</label>
-        <select name="familyDMWho">
-            <option value="">Nenhum</option>
-            <option value="Pai">Pai</option>
-            <option value="Mãe">Mãe</option>
-        </select>
-        <label><input type="checkbox" name="familyHistory" value="Cardíaco"> Cardíaco</label>
-        <select name="familyCardíacoWho">
-            <option value="">Nenhum</option>
-            <option value="Pai">Pai</option>
-            <option value="Mãe">Mãe</option>
-        </select>
-        <label><input type="checkbox" name="familyHistory" value="Câncer (CA)"> Câncer (CA)</label>
-        <select name="familyCâncer (CA)Who">
-            <option value="">Nenhum</option>
-            <option value="Pai">Pai</option>
-            <option value="Mãe">Mãe</option>
-        </select>
-    </div>
-</div><div class="form-group">
-    <label>Histórico Familiar (1º grau):</label>
-    <div class="checkbox-group">
-        <label><input type="checkbox" name="familyHistory" value="HAS"> HAS</label>
-        <select name="familyHASWho">
-            <option value="">Nenhum</option>
-            <option value="Pai">Pai</option>
-            <option value="Mãe">Mãe</option>
-        </select>
-        <label><input type="checkbox" name="familyHistory" value="DM"> DM</label>
-        <select name="familyDMWho">
-            <option value="">Nenhum</option>
-            <option value="Pai">Pai</option>
-            <option value="Mãe">Mãe</option>
-        </select>
-        <label><input type="checkbox" name="familyHistory" value="Cardíaco"> Cardíaco</label>
-        <select name="familyCardíacoWho">
-            <option value="">Nenhum</option>
-            <option value="Pai">Pai</option>
-            <option value="Mãe">Mãe</option>
-        </select>
-        <label><input type="checkbox" name="familyHistory" value="Câncer (CA)"> Câncer (CA)</label>
-        <select name="familyCâncer (CA)Who">
-            <option value="">Nenhum</option>
-            <option value="Pai">Pai</option>
-            <option value="Mãe">Mãe</option>
-        </select>
-    </div>
-</div>
+                    <label>Histórico Familiar (1º grau):</label>
+                    <div class="checkbox-group">
+                        <div>
+                            <label><input type="checkbox" name="familyHistory" value="HAS"> HAS</label>
+                            <div class="checkbox-group" style="margin-left: 20px;">
+                                <label><input type="checkbox" name="familyHASWho" value="Pai"> Pai</label>
+                                <label><input type="checkbox" name="familyHASWho" value="Mãe"> Mãe</label>
+                                <label><input type="checkbox" name="familyHASWho" value="Avô Paterno"> Avô Paterno</label>
+                                <label><input type="checkbox" name="familyHASWho" value="Avó Paterna"> Avó Paterna</label>
+                                <label><input type="checkbox" name="familyHASWho" value="Avô Materno"> Avô Materno</label>
+                                <label><input type="checkbox" name="familyHASWho" value="Avó Materna"> Avó Materna</label>
+                            </div>
+                        </div>
+                        <div>
+                            <label><input type="checkbox" name="familyHistory" value="DM"> DM</label>
+                            <div class="checkbox-group" style="margin-left: 20px;">
+                                <label><input type="checkbox" name="familyDMWho" value="Pai"> Pai</label>
+                                <label><input type="checkbox" name="familyDMWho" value="Mãe"> Mãe</label>
+                                <label><input type="checkbox" name="familyDMWho" value="Avô Paterno"> Avô Paterno</label>
+                                <label><input type="checkbox" name="familyDMWho" value="Avó Paterna"> Avó Paterna</label>
+                                <label><input type="checkbox" name="familyDMWho" value="Avô Materno"> Avô Materno</label>
+                                <label><input type="checkbox" name="familyDMWho" value="Avó Materna"> Avó Materna</label>
+                            </div>
+                        </div>
+                        <div>
+                            <label><input type="checkbox" name="familyHistory" value="Cardíaco"> Cardíaco</label>
+                            <div class="checkbox-group" style="margin-left: 20px;">
+                                <label><input type="checkbox" name="familyCardíacoWho" value="Pai"> Pai</label>
+                                <label><input type="checkbox" name="familyCardíacoWho" value="Mãe"> Mãe</label>
+                                <label><input type="checkbox" name="familyCardíacoWho" value="Avô Paterno"> Avô Paterno</label>
+                                <label><input type="checkbox" name="familyCardíacoWho" value="Avó Paterna"> Avó Paterna</label>
+                                <label><input type="checkbox" name="familyCardíacoWho" value="Avô Materno"> Avô Materno</label>
+                                <label><input type="checkbox" name="familyCardíacoWho" value="Avó Materna"> Avó Materna</label>
+                            </div>
+                        </div>
+                        <div>
+                            <label><input type="checkbox" name="familyHistory" value="CA"> Câncer (CA)</label>
+                            <div class="checkbox-group" style="margin-left: 20px;">
+                                <label><input type="checkbox" name="familyCAWho" value="Pai"> Pai</label>
+                                <label><input type="checkbox" name="familyCAWho" value="Mãe"> Mãe</label>
+                                <label><input type="checkbox" name="familyCAWho" value="Avô Paterno"> Avô Paterno</label>
+                                <label><input type="checkbox" name="familyCAWho" value="Avó Paterna"> Avó Paterna</label>
+                                <label><input type="checkbox" name="familyCAWho" value="Avô Materno"> Avô Materno</label>
+                                <label><input type="checkbox" name="familyCAWho" value="Avó Materna"> Avó Materna</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="form-group">
                     <label for="healthComplaint">Alguma queixa de saúde?</label>
                     <input type="text" id="healthComplaint">
