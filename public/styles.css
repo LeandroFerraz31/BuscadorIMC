@@ -502,43 +502,6 @@ footer {
     font-size: 0.9rem;
 }
 
-/* Adicione ao final do styles.css existente ou substitua a seção relevante */
-.filters-section {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-}
-
-.filter-container {
-    display: flex;
-    flex-direction: column;
-    min-width: 200px;
-}
-
-.filter-container label {
-    font-size: 0.9rem;
-    margin-bottom: 0.3rem;
-}
-
-.filter-container input,
-.filter-container select {
-    padding: 0.5rem;
-    font-size: 0.9rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-.checkbox-group .checkbox-group {
-    margin-left: 20px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 0.3rem;
-}
-
-.checkbox-group .checkbox-group label {
-    font-size: 0.85rem;
-}
 /* Media Queries para Responsividade */
 @media (max-width: 1024px) {
     .summary-cards {
