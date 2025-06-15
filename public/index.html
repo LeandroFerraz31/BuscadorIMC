@@ -15,51 +15,51 @@
             <button id="exportBtn">Exportar Dados</button>
         </div>
     </header>
-    
+
     <main>
         <div class="tabs">
             <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
-            <button class="tab-btn" data-tab="detailed-data">Dados Detalhados</button>
+            <button class="tab-btn" data-tab="details">Dados Detalhados</button>
         </div>
-        
-        <section class="filters-section">
-            <div class="filter-container">
-                <label for="employeeFilter">Funcionário:</label>
-                <input type="text" id="employeeFilter" list="employeeSuggestions" placeholder="Digite o nome do funcionário">
-                <datalist id="employeeSuggestions">
-                    <option value="all">Todos os Funcionários</option>
-                </datalist>
+
+        <div id="dashboard-content" class="tab-content active">
+            <div class="filters-section">
+                <div class="filter-container">
+                    <label for="employeeFilter">Funcionário:</label>
+                    <input list="employeeSuggestions" id="employeeFilter" placeholder="Digite o nome">
+                    <datalist id="employeeSuggestions">
+                        <option value="all">Todos os Funcionários</option>
+                    </datalist>
+                </div>
+                <div class="filter-container">
+                    <label for="branchFilter">Unidade/Filial:</label>
+                    <select id="branchFilter">
+                        <option value="all">Todas as Unidades</option>
+                    </select>
+                </div>
             </div>
-            <div class="filter-container">
-                <label for="branchFilter">Unidade/Filial:</label>
-                <select id="branchFilter">
-                    <option value="all">Todas as Unidades</option>
-                </select>
-            </div>
-        </section>
-        
-        <div class="tab-content active" id="dashboard-content">
-            <section class="summary-cards">
+
+            <div class="summary-cards">
                 <div class="card" id="totalEmployees">
                     <h3>Total de Funcionários</h3>
-                    <p class="number">0</p>
+                    <div class="number">0</div>
                 </div>
                 <div class="card" id="medicationUsers">
                     <h3>Uso de Medicação</h3>
-                    <p class="number">0</p>
+                    <div class="number">0</div>
                 </div>
                 <div class="card" id="pcdCount">
                     <h3>PCDs</h3>
-                    <p class="number">0</p>
+                    <div class="number">0</div>
                 </div>
-            </section>
+            </div>
 
-            <section class="charts-container">
+            <div class="charts-container">
                 <div class="chart-wrapper full-width">
                     <h2>Condições de Saúde</h2>
                     <div class="chart-filters">
                         <select id="healthConditionsFilter" multiple>
-                            <option value="all" selected>Todos</option>
+                            <option value="all">Todos</option>
                             <option value="HAS">Hipertensão (HAS)</option>
                             <option value="DM">Diabetes (DM)</option>
                             <option value="Cardíaco">Cardíaco</option>
@@ -76,21 +76,14 @@
                         </select>
                         <button id="applyHealthFilter" class="filter-btn">Aplicar</button>
                     </div>
-                    <div class="chart" id="healthConditionsChart"></div>
-                    <div class="chart-legend">
-                        <span class="legend-item">
-                            <span class="legend-color health-condition"></span>
-                            <span class="legend-text">Condições de Saúde</span>
-                        </span>
-                    </div>
+                    <div id="healthConditionsChart" class="chart"></div>
                 </div>
-                
                 <div class="sub-charts-container">
                     <div class="chart-wrapper">
                         <h2>Distribuição de IMC</h2>
                         <div class="chart-filters">
                             <select id="imcFilter" multiple>
-                                <option value="all" selected>Todos</option>
+                                <option value="all">Todos</option>
                                 <option value="imcBelow18">Abaixo de 18</option>
                                 <option value="imc18to24">18-24</option>
                                 <option value="imc24to29">24-29</option>
@@ -100,98 +93,71 @@
                             </select>
                             <button id="applyImcFilter" class="filter-btn">Aplicar</button>
                         </div>
-                        <div class="chart" id="imcChart"></div>
-                        <div class="chart-legend">
-                            <span class="legend-item">
-                                <span class="legend-color imc-category"></span>
-                                <span class="legend-text">Categorias de IMC</span>
-                            </span>
-                        </div>
+                        <div id="imcChart" class="chart"></div>
                     </div>
-                    
                     <div class="chart-wrapper">
                         <h2>Hábitos</h2>
                         <div class="chart-filters">
                             <select id="habitsFilter" multiple>
-                                <option value="all" selected>Todos</option>
+                                <option value="all">Todos</option>
                                 <option value="smoker">Fumantes</option>
                                 <option value="drinker">Etilistas</option>
                                 <option value="medication">Medicação</option>
                             </select>
                             <button id="applyHabitsFilter" class="filter-btn">Aplicar</button>
                         </div>
-                        <div class="chart" id="habitsChart"></div>
-                        <div class="chart-legend">
-                            <span class="legend-item">
-                                <span class="legend-color habits"></span>
-                                <span class="legend-text">Hábitos</span>
-                            </span>
-                        </div>
+                        <div id="habitsChart" class="chart"></div>
                     </div>
                 </div>
-            </section>
+            </div>
         </div>
-        
-        <div class="tab-content" id="detailed-data-content">
-            <section class="data-table-section">
+
+        <div id="details-content" class="tab-content">
+            <div class="data-table-section">
                 <h2>Dados Detalhados</h2>
                 <div class="table-container">
                     <table id="dataTable">
                         <thead>
                             <tr>
-                                <th>Nome</th>
-                                <th>Idade</th>
-                                <th>Peso</th>
-                                <th>Altura</th>
-                                <th>Setor</th>
-                                <th>Filial/Unidade</th>
-                                <th>Patologia</th>
-                                <th>Medicação</th>
-                                <th>PCD</th>
-                                <th>Fumante</th>
-                                <th>Etilista</th>
-                                <th>IMC</th>
-                                <th>Fraturou?</th>
-                                <th>Parte Fraturada</th>
-                                <th>Internado?</th>
-                                <th>Motivo/Tempo</th>
-                                <th>Último Check-up</th>
-                                <th>Histórico Familiar</th>
-                                <th>Queixa de Saúde</th>
-                                <th>Ações</th>
+                                <th>Nome</th><th>Idade</th><th>Peso</th><th>Altura</th><th>Setor</th>
+                                <th>Filial/Unidade</th><th>Patologia</th><th>Medicação</th><th>PCD</th>
+                                <th>Fumante</th><th>Etilista</th><th>IMC</th><th>Fraturou?</th>
+                                <th>Parte Fraturada</th><th>Internado?</th><th>Motivo/Tempo</th>
+                                <th>Último Check-up</th><th>Histórico Familiar</th><th>Queixa de Saúde</th><th>Ações</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
                 </div>
-            </section>
+            </div>
         </div>
     </main>
-    
+
     <div id="dataModal" class="modal">
         <div class="modal-content">
             <span class="close">×</span>
             <h2>Adicionar Novo Funcionário</h2>
             <form id="employeeForm">
+                <input type="hidden" id="employeeId">
                 <div class="form-group">
                     <label for="name">Nome:</label>
                     <input type="text" id="name" required>
                 </div>
                 <div class="form-group">
                     <label for="age">Idade:</label>
-                    <input type="number" id="age" min="16" max="120" required>
+                    <input type="number" id="age" required>
                 </div>
                 <div class="form-group">
                     <label for="weight">Peso (kg):</label>
-                    <input type="number" id="weight" min="30" max="300" step="0.1" required>
+                    <input type="number" step="0.1" id="weight" required>
                 </div>
                 <div class="form-group">
                     <label for="height">Altura (m):</label>
-                    <input type="number" id="height" min="1" max="2.5" step="0.01" required>
+                    <input type="number" step="0.01" id="height" required>
                 </div>
                 <div class="form-group">
                     <label for="imc">IMC (Calculado):</label>
-                    <input type="number" id="imc" step="0.1" readonly>
+                    <input type="text" id="imc" readonly>
                 </div>
                 <div class="form-group">
                     <label for="sector">Setor:</label>
@@ -241,7 +207,7 @@
                 </div>
                 <div class="form-group">
                     <label for="pcd">PCD:</label>
-                    <select id="pcd">
+                    <select id="pcd" required>
                         <option value="Não">Não</option>
                         <option value="Sim, Físico">Sim, Físico</option>
                         <option value="Sim, Visual">Sim, Visual</option>
@@ -291,60 +257,65 @@
                     <input type="text" id="lastCheckup">
                 </div>
                 <div class="form-group">
-    <label>Histórico Familiar (1º grau):</label>
-    <div class="checkbox-group">
-        <label><input type="checkbox" name="familyHistory" value="HAS"> HAS</label>
-        <select name="familyHASWho" multiple>
-            <option value="Nenhum">Nenhum</option>
-            <option value="Pai">Pai</option>
-            <option value="Mãe">Mãe</option>
-            <option value="Avô Paterno">Avô Paterno</option>
-            <option value="Avó Paterna">Avó Paterna</option>
-            <option value="Avô Materno">Avô Materno</option>
-            <option value="Avó Materna">Avó Materna</option>
-        </select>
-        <label><input type="checkbox" name="familyHistory" value="DM"> DM</label>
-        <select name="familyDMWho" multiple>
-            <option value="Nenhum">Nenhum</option>
-            <option value="Pai">Pai</option>
-            <option value="Mãe">Mãe</option>
-            <option value="Avô Paterno">Avô Paterno</option>
-            <option value="Avó Paterna">Avó Paterna</option>
-            <option value="Avô Materno">Avô Materno</option>
-            <option value="Avó Materna">Avó Materna</option>
-        </select>
-        <label><input type="checkbox" name="familyHistory" value="Cardíaco"> Cardíaco</label>
-        <select name="familyCardíacoWho" multiple>
-            <option value="Nenhum">Nenhum</option>
-            <option value="Pai">Pai</option>
-            <option value="Mãe">Mãe</option>
-            <option value="Avô Paterno">Avô Paterno</option>
-            <option value="Avó Paterna">Avó Paterna</option>
-            <option value="Avô Materno">Avô Materno</option>
-            <option value="Avó Materna">Avó Materna</option>
-        </select>
-        <label><input type="checkbox" name="familyHistory" value="Câncer (CA)"> Câncer (CA)</label>
-        <select name="familyCâncer (CA)Who" multiple>
-            <option value="Nenhum">Nenhum</option>
-            <option value="Pai">Pai</option>
-            <option value="Mãe">Mãe</option>
-            <option value="Avô Paterno">Avô Paterno</option>
-            <option value="Avó Paterna">Avó Paterna</option>
-            <option value="Avô Materno">Avô Materno</option>
-            <option value="Avó Materna">Avó Materna</option>
-        </select>
-    </div>
-</div>
+                    <label>Histórico Familiar (1º grau):</label>
+                    <div class="checkbox-group">
+                        <div>
+                            <label><input type="checkbox" name="familyHistory" value="HAS"> HAS</label>
+                            <div class="checkbox-group" style="margin-left: 20px;">
+                                <label><input type="checkbox" name="familyHASWho" value="Pai"> Pai</label>
+                                <label><input type="checkbox" name="familyHASWho" value="Mãe"> Mãe</label>
+                                <label><input type="checkbox" name="familyHASWho" value="Avô Paterno"> Avô Paterno</label>
+                                <label><input type="checkbox" name="familyHASWho" value="Avó Paterna"> Avó Paterna</label>
+                                <label><input type="checkbox" name="familyHASWho" value="Avô Materno"> Avô Materno</label>
+                                <label><input type="checkbox" name="familyHASWho" value="Avó Materna"> Avó Materna</label>
+                            </div>
+                        </div>
+                        <div>
+                            <label><input type="checkbox" name="familyHistory" value="DM"> DM</label>
+                            <div class="checkbox-group" style="margin-left: 20px;">
+                                <label><input type="checkbox" name="familyDMWho" value="Pai"> Pai</label>
+                                <label><input type="checkbox" name="familyDMWho" value="Mãe"> Mãe</label>
+                                <label><input type="checkbox" name="familyDMWho" value="Avô Paterno"> Avô Paterno</label>
+                                <label><input type="checkbox" name="familyDMWho" value="Avó Paterna"> Avó Paterna</label>
+                                <label><input type="checkbox" name="familyDMWho" value="Avô Materno"> Avô Materno</label>
+                                <label><input type="checkbox" name="familyDMWho" value="Avó Materna"> Avó Materna</label>
+                            </div>
+                        </div>
+                        <div>
+                            <label><input type="checkbox" name="familyHistory" value="Cardíaco"> Cardíaco</label>
+                            <div class="checkbox-group" style="margin-left: 20px;">
+                                <label><input type="checkbox" name="familyCardíacoWho" value="Pai"> Pai</label>
+                                <label><input type="checkbox" name="familyCardíacoWho" value="Mãe"> Mãe</label>
+                                <label><input type="checkbox" name="familyCardíacoWho" value="Avô Paterno"> Avô Paterno</label>
+                                <label><input type="checkbox" name="familyCardíacoWho" value="Avó Paterna"> Avó Paterna</label>
+                                <label><input type="checkbox" name="familyCardíacoWho" value="Avô Materno"> Avô Materno</label>
+                                <label><input type="checkbox" name="familyCardíacoWho" value="Avó Materna"> Avó Materna</label>
+                            </div>
+                        </div>
+                        <div>
+                            <label><input type="checkbox" name="familyHistory" value="CA"> Câncer (CA)</label>
+                            <div class="checkbox-group" style="margin-left: 20px;">
+                                <label><input type="checkbox" name="familyCAWho" value="Pai"> Pai</label>
+                                <label><input type="checkbox" name="familyCAWho" value="Mãe"> Mãe</label>
+                                <label><input type="checkbox" name="familyCAWho" value="Avô Paterno"> Avô Paterno</label>
+                                <label><input type="checkbox" name="familyCAWho" value="Avó Paterna"> Avó Paterna</label>
+                                <label><input type="checkbox" name="familyCAWho" value="Avô Materno"> Avô Materno</label>
+                                <label><input type="checkbox" name="familyCAWho" value="Avó Materna"> Avó Materna</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="form-group">
                     <label for="healthComplaint">Alguma queixa de saúde?</label>
                     <input type="text" id="healthComplaint">
                 </div>
-                <input type="hidden" id="employeeId" value="">
-                <button type="submit">Salvar</button>
+                <div class="modal-actions">
+                    <button type="submit">Salvar</button>
+                </div>
             </form>
         </div>
     </div>
-    
+
     <div id="deleteModal" class="modal">
         <div class="modal-content delete-modal">
             <h2>Confirmar Exclusão</h2>
@@ -355,11 +326,11 @@
             </div>
         </div>
     </div>
-    
+
     <footer>
         <p>© 2025 Busca Ativa de Saúde</p>
     </footer>
-    
+
     <script src="script.js"></script>
 </body>
 </html>
