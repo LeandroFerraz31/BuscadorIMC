@@ -349,7 +349,9 @@ const editEmployee = (index) => {
             const checkbox = document.querySelector(`input[name="familyHistory"][value="${condition}"]`);
             if (checkbox) checkbox.checked = true;
             const whoInput = document.querySelector(`input[name="family${condition}Who"]`);
-            if (whoInput) whoInput.value = who || '';
+        if (whoInput && who && who.trim() !== '') {
+            whoInput.value = who;
+        }
         });
     }
     document.getElementById('healthComplaint').value = employee.healthComplaint || '';
