@@ -60,7 +60,7 @@ const countIndicators = () => {
     };
 
     filteredData.forEach(employee => {
-        employee.conditions.forEach(condition => {
+        (employee.conditions || []).forEach(condition => {
             if (counts.hasOwnProperty(condition)) counts[condition]++;
         });
         if (employee.medication && employee.medication.trim() !== "") counts.medication++;
