@@ -72,6 +72,29 @@ const db = new sqlite3.Database(dbPath, (err) => {
 // Servir arquivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Middleware de validação
+const validateEmployeeData = (data) => {
+    if (!data.name || !data.sector || !data.branch) {
+        throw new Error('Nome, setor e filial são obrigatórios.');
+    }
+    if (data.age && (isNaN(data.age) || data.age < 16 || data.age > 120)) {
+        throw new Error('Idade inválida (deve ser entre 16 e 120).');
+    }
+    if (data.weight && (isNaN(data.weight) || data.weight < 30 || data.weight > 300)) {
+        throw new Error('Peso inválido (deve ser entre 30 e 300 kg).');
+    }
+    if (data.height && (isNaN(data.height) || data.height < 1 || data.height > 2.5)) {
+        throw new Error('Altura inválida (deve ser entre 1 e 2.5 m).');
+    }
+    if (data.conditions && !Array.isArray(data.conditions)) {
+        throw new Error('Condições deve ser um array.');
+    }
+    if (data.familyHistory && typeof data.familyHistory !== 'object') {
+        throw new Error('Histórico familiar deve ser um objeto.');
+    }
+    return true;
+};
+
 // Endpoint para obter todos os funcionários
 app.get('/api/employees', (req, res) => {
     console.log('GET /api/employees solicitado');
@@ -99,62 +122,69 @@ app.post('/api/employees', (req, res) => {
         hospitalizationReason, lastCheckup, familyHistory, healthComplaint, id
     } = req.body;
 
-    // Calcular IMC
-    const imc = height > 0 ? (weight / (height * height)).toFixed(1) : 0;
+    try {
+        validateEmployeeData({ name, age, weight, height, sector, branch, conditions, familyHistory });
 
-    const conditionsJson = JSON.stringify(conditions || []);
-    const familyHistoryJson = JSON.stringify(familyHistory || {});
+        // Calcular IMC
+        const imc = height > 0 ? (weight / (height * height)).toFixed(1) : 0;
 
-    if (id) {
-        // Atualizar funcionário existente
-        const stmt = db.prepare(`
-            UPDATE employees SET
-                name=?, age=?, weight=?, height=?, sector=?, branch=?, conditions=?,
-                medication=?, pcd=?, smoker=?, drinker=?, imc=?, fractured=?,
-                fracturedPart=?, hospitalized=?, hospitalizationReason=?, lastCheckup=?,
-                familyHistory=?, healthComplaint=?
-            WHERE id=?
-        `);
-        stmt.run(
-            name, age, weight, height, sector, branch, conditionsJson,
-            medication, pcd, smoker, drinker, imc, fractured,
-            fracturedPart, hospitalized, hospitalizationReason, lastCheckup,
-            familyHistoryJson, healthComplaint, id,
-            function(err) {
-                if (err) {
-                    console.error('Erro ao atualizar:', err.message);
-                    res.status(500).json({ error: 'Erro ao atualizar funcionário' });
-                    return;
+        const conditionsJson = JSON.stringify(conditions || []);
+        const familyHistoryJson = JSON.stringify(familyHistory || {});
+
+        if (id) {
+            // Atualizar funcionário existente
+            const stmt = db.prepare(`
+                UPDATE employees SET
+                    name=?, age=?, weight=?, height=?, sector=?, branch=?, conditions=?,
+                    medication=?, pcd=?, smoker=?, drinker=?, imc=?, fractured=?,
+                    fracturedPart=?, hospitalized=?, hospitalizationReason=?, lastCheckup=?,
+                    familyHistory=?, healthComplaint=?
+                WHERE id=?
+            `);
+            stmt.run(
+                name, age, weight, height, sector, branch, conditionsJson,
+                medication, pcd, smoker, drinker, imc, fractured,
+                fracturedPart, hospitalized, hospitalizationReason, lastCheckup,
+                familyHistoryJson, healthComplaint, id,
+                function(err) {
+                    if (err) {
+                        console.error('Erro ao atualizar:', err.message);
+                        res.status(500).json({ error: 'Erro ao atualizar funcionário' });
+                        return;
+                    }
+                    console.log('Funcionário atualizado, ID:', id);
+                    res.json({ message: 'Funcionário atualizado com sucesso', id });
                 }
-                console.log('Funcionário atualizado, ID:', id);
-                res.json({ message: 'Funcionário atualizado com sucesso' });
-            }
-        );
-        stmt.finalize();
-    } else {
-        // Inserir novo funcionário
-        const stmt = db.prepare(`
-            INSERT INTO employees (
-                name, age, weight, height, sector, branch, conditions, medication,
+            );
+            stmt.finalize();
+        } else {
+            // Inserir novo funcionário
+            const stmt = db.prepare(`
+                INSERT INTO employees (
+                    name, age, weight, height, sector, branch, conditions, medication,
+                    pcd, smoker, drinker, imc, fractured, fracturedPart, hospitalized,
+                    hospitalizationReason, lastCheckup, familyHistory, healthComplaint
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `);
+            stmt.run(
+                name, age, weight, height, sector, branch, conditionsJson, medication,
                 pcd, smoker, drinker, imc, fractured, fracturedPart, hospitalized,
-                hospitalizationReason, lastCheckup, familyHistory, healthComplaint
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-        stmt.run(
-            name, age, weight, height, sector, branch, conditionsJson, medication,
-            pcd, smoker, drinker, imc, fractured, fracturedPart, hospitalized,
-            hospitalizationReason, lastCheckup, familyHistoryJson, healthComplaint,
-            function(err) {
-                if (err) {
-                    console.error('Erro ao inserir:', err.message);
-                    res.status(500).json({ error: 'Erro ao salvar funcionário' });
-                    return;
+                hospitalizationReason, lastCheckup, familyHistoryJson, healthComplaint,
+                function(err) {
+                    if (err) {
+                        console.error('Erro ao inserir:', err.message);
+                        res.status(500).json({ error: 'Erro ao salvar funcionário' });
+                        return;
+                    }
+                    console.log('Funcionário inserido, ID:', this.lastID);
+                    res.json({ message: 'Funcionário salvo com sucesso', id: this.lastID });
                 }
-                console.log('Funcionário inserido, ID:', this.lastID);
-                res.json({ message: 'Funcionário salvo com sucesso', id: this.lastID });
-            }
-        );
-        stmt.finalize();
+            );
+            stmt.finalize();
+        }
+    } catch (error) {
+        console.error('Validação falhou:', error.message);
+        res.status(400).json({ error: error.message });
     }
 });
 
@@ -182,6 +212,6 @@ app.delete('/api/employees/:id', (req, res) => {
 // Iniciar o servidor
 const PORT = process.env.PORT || 80;
 app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-    app.timeout = 60000; // Aumentar o timeout para 60 segundos
+    console.log(`Servidor rodando na porta ${PORT} em ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}`);
+    app.timeout = 60000; // Timeout de 60 segundos
 });
