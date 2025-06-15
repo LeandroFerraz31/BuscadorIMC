@@ -8,6 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Configuração do banco de dados para Square Cloud
 const dbPath = process.env.SQUARE_CLOUD 
     ? '/app/storage/employees.db' 
     : path.join(__dirname, 'employees.db');
@@ -68,8 +69,10 @@ const db = new sqlite3.Database(dbPath, (err) => {
     });
 });
 
+// Servir arquivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Endpoint para obter todos os funcionários
 app.get('/api/employees', (req, res) => {
     console.log('GET /api/employees solicitado');
     db.all(`SELECT * FROM employees`, [], (err, rows) => {
@@ -78,24 +81,16 @@ app.get('/api/employees', (req, res) => {
             res.status(500).json({ error: 'Erro ao buscar dados' });
             return;
         }
-        const employees = rows.map(row => {
-            let parsedFamilyHistory = {};
-            try {
-                parsedFamilyHistory = row.familyHistory ? JSON.parse(row.familyHistory) : {};
-                console.log(`Funcionário ID ${row.id} - familyHistory:`, parsedFamilyHistory);
-            } catch (parseErr) {
-                console.error(`Erro ao parsear familyHistory para ID ${row.id}:`, parseErr.message);
-            }
-            return {
-                ...row,
-                conditions: row.conditions ? JSON.parse(row.conditions) : [],
-                familyHistory: parsedFamilyHistory
-            };
-        });
+        const employees = rows.map(row => ({
+            ...row,
+            conditions: row.conditions ? JSON.parse(row.conditions) : [],
+            familyHistory: row.familyHistory ? JSON.parse(row.familyHistory) : {}
+        }));
         res.json(employees);
     });
 });
 
+// Endpoint para adicionar ou atualizar um funcionário
 app.post('/api/employees', (req, res) => {
     console.log('POST /api/employees recebido:', req.body);
     const {
@@ -104,113 +99,66 @@ app.post('/api/employees', (req, res) => {
         hospitalizationReason, lastCheckup, familyHistory, healthComplaint, id
     } = req.body;
 
-    const saveEmployee = (familyHistoryJson) => {
-        const imc = height > 0 ? (weight / (height * height)).toFixed(1) : 0;
-        const conditionsJson = JSON.stringify(conditions || []);
+    // Calcular IMC
+    const imc = height > 0 ? (weight / (height * height)).toFixed(1) : 0;
 
-        if (id) {
-            const stmt = db.prepare(`
-                UPDATE employees SET
-                    name=?, age=?, weight=?, height=?, sector=?, branch=?, conditions=?,
-                    medication=?, pcd=?, smoker=?, drinker=?, imc=?, fractured=?,
-                    fracturedPart=?, hospitalized=?, hospitalizationReason=?, lastCheckup=?,
-                    familyHistory=?, healthComplaint=?
-                WHERE id=?
-            `);
-            stmt.run(
-                name, age, weight, height, sector, branch, conditionsJson,
-                medication, pcd, smoker, drinker, imc, fractured,
-                fracturedPart, hospitalized, hospitalizationReason, lastCheckup,
-                familyHistoryJson, healthComplaint, id,
-                function(err) {
-                    if (err) {
-                        console.error('Erro ao atualizar:', err.message);
-                        res.status(500).json({ error: 'Erro ao atualizar funcionário' });
-                        return;
-                    }
-                    console.log('Funcionário atualizado, ID:', id);
-                    res.json({ message: 'Funcionário atualizado com sucesso' });
-                }
-            );
-            stmt.finalize();
-        } else {
-            const stmt = db.prepare(`
-                INSERT INTO employees (
-                    name, age, weight, height, sector, branch, conditions, medication,
-                    pcd, smoker, drinker, imc, fractured, fracturedPart, hospitalized,
-                    hospitalizationReason, lastCheckup, familyHistory, healthComplaint
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `);
-            stmt.run(
-                name, age, weight, height, sector, branch, conditionsJson, medication,
-                pcd, smoker, drinker, imc, fractured, fracturedPart, hospitalized,
-                hospitalizationReason, lastCheckup, familyHistoryJson, healthComplaint,
-                function(err) {
-                    if (err) {
-                        console.error('Erro ao inserir:', err.message);
-                        res.status(500).json({ error: 'Erro ao salvar funcionário' });
-                        return;
-                    }
-                    console.log('Funcionário inserido, ID:', this.lastID);
-                    res.json({ message: 'Funcionário salvo com sucesso', id: this.lastID });
-                }
-            );
-            stmt.finalize();
-        }
-    };
+    const conditionsJson = JSON.stringify(conditions || []);
+    const familyHistoryJson = JSON.stringify(familyHistory || {});
 
-    let familyHistoryJson = '{}';
-    if (familyHistory && typeof familyHistory === 'object' && !Array.isArray(familyHistory)) {
-        const isValid = Object.entries(familyHistory).every(([condition, who]) => 
-            typeof condition === 'string' && Array.isArray(who) && who.every(v => typeof v === 'string')
-        );
-        if (isValid) {
-            try {
-                familyHistoryJson = JSON.stringify(familyHistory);
-                console.log('familyHistory salvo:', familyHistoryJson);
-                saveEmployee(familyHistoryJson);
-            } catch (err) {
-                console.error('Erro ao serializar familyHistory:', err.message);
-                res.status(400).json({ error: 'Formato inválido para familyHistory' });
-                return;
-            }
-        } else {
-            console.warn('familyHistory contém dados inválidos:', familyHistory);
-            if (id) {
-                db.get(`SELECT familyHistory FROM employees WHERE id = ?`, [id], (err, row) => {
-                    if (err) {
-                        console.error('Erro ao buscar familyHistory existente:', err.message);
-                        res.status(500).json({ error: 'Erro ao validar dados' });
-                        return;
-                    }
-                    familyHistoryJson = row.familyHistory || '{}';
-                    console.log('Mantendo familyHistory existente:', familyHistoryJson);
-                    saveEmployee(familyHistoryJson);
-                });
-            } else {
-                console.log('Usando familyHistory vazio para novo funcionário');
-                saveEmployee(familyHistoryJson);
-            }
-        }
-    } else {
-        console.warn('familyHistory inválido, usando {}:', familyHistory);
-        if (id) {
-            db.get(`SELECT familyHistory FROM employees WHERE id = ?`, [id], (err, row) => {
+    if (id) {
+        // Atualizar funcionário existente
+        const stmt = db.prepare(`
+            UPDATE employees SET
+                name=?, age=?, weight=?, height=?, sector=?, branch=?, conditions=?,
+                medication=?, pcd=?, smoker=?, drinker=?, imc=?, fractured=?,
+                fracturedPart=?, hospitalized=?, hospitalizationReason=?, lastCheckup=?,
+                familyHistory=?, healthComplaint=?
+            WHERE id=?
+        `);
+        stmt.run(
+            name, age, weight, height, sector, branch, conditionsJson,
+            medication, pcd, smoker, drinker, imc, fractured,
+            fracturedPart, hospitalized, hospitalizationReason, lastCheckup,
+            familyHistoryJson, healthComplaint, id,
+            function(err) {
                 if (err) {
-                    console.error('Erro ao buscar familyHistory existente:', err.message);
-                    res.status(500).json({ error: 'Erro ao validar dados' });
+                    console.error('Erro ao atualizar:', err.message);
+                    res.status(500).json({ error: 'Erro ao atualizar funcionário' });
                     return;
                 }
-                familyHistoryJson = row.familyHistory || '{}';
-                console.log('Mantendo familyHistory existente:', familyHistoryJson);
-                saveEmployee(familyHistoryJson);
-            });
-        } else {
-            saveEmployee(familyHistoryJson);
-        }
+                console.log('Funcionário atualizado, ID:', id);
+                res.json({ message: 'Funcionário atualizado com sucesso' });
+            }
+        );
+        stmt.finalize();
+    } else {
+        // Inserir novo funcionário
+        const stmt = db.prepare(`
+            INSERT INTO employees (
+                name, age, weight, height, sector, branch, conditions, medication,
+                pcd, smoker, drinker, imc, fractured, fracturedPart, hospitalized,
+                hospitalizationReason, lastCheckup, familyHistory, healthComplaint
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        stmt.run(
+            name, age, weight, height, sector, branch, conditionsJson, medication,
+            pcd, smoker, drinker, imc, fractured, fracturedPart, hospitalized,
+            hospitalizationReason, lastCheckup, familyHistoryJson, healthComplaint,
+            function(err) {
+                if (err) {
+                    console.error('Erro ao inserir:', err.message);
+                    res.status(500).json({ error: 'Erro ao salvar funcionário' });
+                    return;
+                }
+                console.log('Funcionário inserido, ID:', this.lastID);
+                res.json({ message: 'Funcionário salvo com sucesso', id: this.lastID });
+            }
+        );
+        stmt.finalize();
     }
 });
 
+// Endpoint para excluir um funcionário
 app.delete('/api/employees/:id', (req, res) => {
     const { id } = req.params;
     console.log('DELETE /api/employees/', id);
@@ -231,8 +179,9 @@ app.delete('/api/employees/:id', (req, res) => {
     stmt.finalize();
 });
 
+// Iniciar o servidor
 const PORT = process.env.PORT || 80;
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
-    app.timeout = 60000;
+    app.timeout = 60000; // Aumentar o timeout para 60 segundos
 });
