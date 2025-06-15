@@ -7,7 +7,6 @@ console.log('API_BASE_URL definido como:', API_BASE_URL);
 
 let employeesData = [];
 let filteredData = [];
-// ... resto do código ...
 
 const dataTable = document.getElementById('dataTable');
 const addDataBtn = document.getElementById('addDataBtn');
@@ -22,7 +21,6 @@ const employeeFilter = document.getElementById('employeeFilter');
 const branchFilter = document.getElementById('branchFilter');
 let currentDeleteId = null;
 
-// Função para calcular o IMC
 const calculateIMC = () => {
     const weight = parseFloat(document.getElementById('weight').value) || 0;
     const height = parseFloat(document.getElementById('height').value) || 0;
@@ -30,7 +28,6 @@ const calculateIMC = () => {
     document.getElementById('imc').value = imc;
 };
 
-// Adicionar listeners para peso e altura
 document.getElementById('weight').addEventListener('input', calculateIMC);
 document.getElementById('height').addEventListener('input', calculateIMC);
 
@@ -70,7 +67,7 @@ const countIndicators = () => {
         if (employee.smoker === "Sim") counts.smoker++;
         if (employee.drinker === "Sim") counts.drinker++;
         if (employee.pcd.startsWith("Sim")) counts.pcd++;
-        const imc = parseFloat(employee.imc);
+        const imc = parseFloat(employee.imc) || 0;
         if (imc < 18) counts.imcBelow18++;
         else if (imc >= 18 && imc < 24) counts.imc18to24++;
         else if (imc >= 24 && imc < 29) counts.imc24to29++;
@@ -89,29 +86,29 @@ const renderTable = () => {
 
     filteredData.forEach((employee, index) => {
         const familyHistoryStr = Object.entries(employee.familyHistory || {})
-            .filter(([condition, who]) => who)
-            .map(([condition, who]) => `${condition}: ${who}`)
-            .join(', ');
+            .filter(([_, who]) => Array.isArray(who) && who.length > 0)
+            .map(([condition, who]) => `${condition}: ${who.join(', ')}`)
+            .join('; ') || 'Nenhum';
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${employee.name}</td>
+            <td>${employee.name || ''}</td>
             <td>${employee.age || 'N/A'}</td>
             <td>${employee.weight || 'N/A'}</td>
             <td>${employee.height || 'N/A'}</td>
-            <td>${employee.sector}</td>
+            <td>${employee.sector || ''}</td>
             <td>${employee.branch || 'N/A'}</td>
-            <td>${employee.conditions.join(', ')}</td>
+            <td>${(employee.conditions || []).join(', ') || 'Nenhuma'}</td>
             <td>${employee.medication || 'Nenhuma'}</td>
-            <td>${employee.pcd}</td>
-            <td>${employee.smoker}</td>
-            <td>${employee.drinker}</td>
-            <td>${employee.imc}</td>
-            <td>${employee.fractured}</td>
+            <td>${employee.pcd || 'Não'}</td>
+            <td>${employee.smoker || 'Não'}</td>
+            <td>${employee.drinker || 'Não'}</td>
+            <td>${employee.imc || 'N/A'}</td>
+            <td>${employee.fractured || 'Não'}</td>
             <td>${employee.fracturedPart || 'N/A'}</td>
-            <td>${employee.hospitalized}</td>
+            <td>${employee.hospitalized || 'Não'}</td>
             <td>${employee.hospitalizationReason || 'N/A'}</td>
             <td>${employee.lastCheckup || 'N/A'}</td>
-            <td>${familyHistoryStr || 'Nenhum'}</td>
+            <td>${familyHistoryStr}</td>
             <td>${employee.healthComplaint || 'Nenhuma'}</td>
             <td>
                 <button class="action-btn edit-btn" data-index="${index}">Editar</button>
@@ -321,40 +318,44 @@ const populateBranchFilter = () => {
 const editEmployee = (index) => {
     console.log('Editando funcionário no índice:', index);
     const employee = filteredData[index];
-    document.getElementById('name').value = employee.name;
+    document.getElementById('name').value = employee.name || '';
     document.getElementById('age').value = employee.age || '';
     document.getElementById('weight').value = employee.weight || '';
     document.getElementById('height').value = employee.height || '';
-    document.getElementById('sector').value = employee.sector;
+    document.getElementById('sector').value = employee.sector || '';
     document.getElementById('branch').value = employee.branch || '';
     document.querySelectorAll('input[name="condition"]').forEach(checkbox => checkbox.checked = false);
-    employee.conditions.forEach(condition => {
+    (employee.conditions || []).forEach(condition => {
         const checkbox = document.querySelector(`input[name="condition"][value="${condition}"]`);
         if (checkbox) checkbox.checked = true;
     });
     document.getElementById('medication').value = employee.medication || '';
-    document.getElementById('pcd').value = employee.pcd;
-    document.querySelectorAll('input[name="smoker"]').forEach(radio => radio.checked = radio.value === employee.smoker);
-    document.querySelectorAll('input[name="drinker"]').forEach(radio => radio.checked = radio.value === employee.drinker);
-    document.getElementById('imc').value = employee.imc;
-    document.querySelectorAll('input[name="fractured"]').forEach(radio => radio.checked = radio.value === employee.fractured);
+    document.getElementById('pcd').value = employee.pcd || 'Não';
+    document.querySelectorAll('input[name="smoker"]').forEach(radio => radio.checked = radio.value === (employee.smoker || 'Não'));
+    document.querySelectorAll('input[name="drinker"]').forEach(radio => radio.checked = radio.value === (employee.drinker || 'Não'));
+    document.getElementById('imc').value = employee.imc || '';
+    document.querySelectorAll('input[name="fractured"]').forEach(radio => radio.checked = radio.value === (employee.fractured || 'Não'));
     document.getElementById('fracturedPart').value = employee.fracturedPart || '';
-    document.querySelectorAll('input[name="hospitalized"]').forEach(radio => radio.checked = radio.value === employee.hospitalized);
+    document.querySelectorAll('input[name="hospitalized"]').forEach(radio => radio.checked = radio.value === (employee.hospitalized || 'Não'));
     document.getElementById('hospitalizationReason').value = employee.hospitalizationReason || '';
     document.getElementById('lastCheckup').value = employee.lastCheckup || '';
     document.querySelectorAll('input[name="familyHistory"]').forEach(checkbox => checkbox.checked = false);
-    document.querySelectorAll('input[name^="family"][name$="Who"]').forEach(input => input.value = '');
-    if (employee.familyHistory) {
+    document.querySelectorAll('input[name^="family"][name$="Who"]').forEach(checkbox => checkbox.checked = false);
+    if (employee.familyHistory && typeof employee.familyHistory === 'object') {
         Object.entries(employee.familyHistory).forEach(([condition, who]) => {
-            const checkbox = document.querySelector(`input[name="familyHistory"][value="${condition}"]`);
-            if (checkbox) checkbox.checked = true;
-            const whoInput = document.querySelector(`input[name="family${condition}Who"]`);
-            if (whoInput) whoInput.value = who || '';
+            const conditionCheckbox = document.querySelector(`input[name="familyHistory"][value="${condition}"]`);
+            if (conditionCheckbox) conditionCheckbox.checked = true;
+            if (Array.isArray(who)) {
+                who.forEach(value => {
+                    const whoCheckbox = document.querySelector(`input[name="family${condition}Who"][value="${value}"]`);
+                    if (whoCheckbox) whoCheckbox.checked = true;
+                });
+            }
         });
     }
     document.getElementById('healthComplaint').value = employee.healthComplaint || '';
-    document.getElementById('employeeId').value = employee.id;
-    calculateIMC(); // Recalcular IMC ao carregar
+    document.getElementById('employeeId').value = employee.id || '';
+    calculateIMC();
     modal.style.display = 'block';
 };
 
@@ -381,31 +382,31 @@ const deleteEmployee = async (index) => {
 };
 
 const addNewEmployee = async () => {
-    const name = document.getElementById('name').value;
+    const name = document.getElementById('name').value.trim();
     const age = parseInt(document.getElementById('age').value) || null;
     const weight = parseFloat(document.getElementById('weight').value) || null;
     const height = parseFloat(document.getElementById('height').value) || null;
-    const sector = document.getElementById('sector').value;
+    const sector = document.getElementById('sector').value.trim();
     const branch = document.getElementById('branch').value;
-    const conditions = Array.from(document.querySelectorAll('input[name="condition"]:checked')).map(el => el.value);
-    const medication = document.getElementById('medication').value || '';
-    const pcd = document.getElementById('pcd').value;
+    const conditions = Array.from(document.querySelectorAll('input[name="condition"]:checked')).map(el => el.value) || [];
+    const medication = document.getElementById('medication').value.trim() || '';
+    const pcd = document.getElementById('pcd').value || 'Não';
     const smoker = document.querySelector('input[name="smoker"]:checked')?.value || 'Não';
     const drinker = document.querySelector('input[name="drinker"]:checked')?.value || 'Não';
     const imc = height > 0 ? (weight / (height * height)).toFixed(1) : 0;
     const fractured = document.querySelector('input[name="fractured"]:checked')?.value || 'Não';
-    const fracturedPart = document.getElementById('fracturedPart').value || '';
+    const fracturedPart = document.getElementById('fracturedPart').value.trim() || '';
     const hospitalized = document.querySelector('input[name="hospitalized"]:checked')?.value || 'Não';
-    const hospitalizationReason = document.getElementById('hospitalizationReason').value || '';
-    const lastCheckup = document.getElementById('lastCheckup').value || '';
+    const hospitalizationReason = document.getElementById('hospitalizationReason').value.trim() || '';
+    const lastCheckup = document.getElementById('lastCheckup').value.trim() || '';
     const familyHistoryCheckboxes = Array.from(document.querySelectorAll('input[name="familyHistory"]:checked'));
     const familyHistory = {};
     familyHistoryCheckboxes.forEach(checkbox => {
         const condition = checkbox.value;
-        const whoInput = document.querySelector(`input[name="family${condition}Who"]`);
-        familyHistory[condition] = whoInput ? whoInput.value : '';
+        const who = Array.from(document.querySelectorAll(`input[name="family${condition}Who"]:checked`)).map(el => el.value) || [];
+        familyHistory[condition] = who.length > 0 ? who : [];
     });
-    const healthComplaint = document.getElementById('healthComplaint').value || '';
+    const healthComplaint = document.getElementById('healthComplaint').value.trim() || '';
     const employeeId = document.getElementById('employeeId').value;
 
     if (!name || !sector || !branch || !weight || !height || !age) {
@@ -427,14 +428,14 @@ const addNewEmployee = async () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newEmployee)
         });
-        if (!response.ok) throw new Error(`Erro ao salvar: ${response.status}`);
+        if (!response.ok) throw new Error(await response.text());
         modal.style.display = 'none';
         employeeForm.reset();
         document.getElementById('employeeId').value = '';
         await fetchEmployees();
     } catch (error) {
         console.error('Erro ao adicionar:', error);
-        alert('Erro ao salvar funcionário.');
+        alert(`Erro ao salvar funcionário: ${error.message}`);
     }
 };
 
@@ -447,7 +448,7 @@ const exportToExcel = () => {
         Altura: employee.height,
         Setor: employee.sector,
         Filial: employee.branch,
-        Patologia: employee.conditions.join(', '),
+        Patologia: (employee.conditions || []).join(', ') || 'Nenhuma',
         Medicação: employee.medication || 'Nenhuma',
         PCD: employee.pcd,
         Fumante: employee.smoker,
@@ -459,16 +460,16 @@ const exportToExcel = () => {
         'Motivo Internação': employee.hospitalizationReason || 'N/A',
         'Último Check-up': employee.lastCheckup || 'N/A',
         'Histórico Familiar': Object.entries(employee.familyHistory || {})
-            .filter(([condition, who]) => who)
-            .map(([condition, who]) => `${condition}: ${who}`)
-            .join(', ') || 'Nenhum',
+            .filter(([_, who]) => Array.isArray(who) && who.length > 0)
+            .map(([condition, who]) => `${condition}: ${who.join(', ')}`)
+            .join('; ') || 'Nenhum',
         'Queixa de Saúde': employee.healthComplaint || 'Nenhuma'
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Funcionários');
-    XLSX.writeFile(workbook, 'funcionarios_saude.xlsx'); // Corrigido para writeFile
+    XLSX.writeFile(workbook, 'funcionarios_saude.xlsx');
 };
 
 const applyFilters = () => {
@@ -477,8 +478,8 @@ const applyFilters = () => {
     const selectedBranch = branchFilter.value;
 
     filteredData = employeesData.filter(employee => {
-        const matchesName = employeeName === 'all' || employee.name.toLowerCase().includes(employeeName);
-        const matchesBranch = selectedBranch === 'all' || employee.branch === selectedBranch;
+        const matchesName = employeeName === 'all' || (employee.name && employee.name.toLowerCase().includes(employeeName));
+        const matchesBranch = selectedBranch === 'all' || (employee.branch && employee.branch === selectedBranch);
         return matchesName && matchesBranch;
     });
 
@@ -541,6 +542,9 @@ const initApp = () => {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             this.classList.add('active');
             document.getElementById(`${this.getAttribute('data-tab')}-content`).classList.add('active');
+            if (this.getAttribute('data-tab') === 'detailed-data') {
+                applyFilters(); // Aplicar filtros ao abrir Dados Detalhados
+            }
         });
     });
 };
