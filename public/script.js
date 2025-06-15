@@ -17,6 +17,8 @@ const closeBtn = document.querySelector('.close');
 const employeeForm = document.getElementById('employeeForm');
 const confirmDeleteBtn = document.getElementById('confirmDelete');
 const cancelDeleteBtn = document.getElementById('cancelDelete');
+const employeeFilter = document.getElementById('employeeFilter');
+const branchFilter = document.getElementById('branchFilter');
 let currentDeleteId = null;
 
 // Função para calcular o IMC
@@ -291,29 +293,27 @@ const renderCharts = () => {
 };
 
 const populateEmployeeSuggestions = () => {
-    const datalists = document.querySelectorAll('#employeeSuggestions');
-    datalists.forEach(datalist => {
-        datalist.innerHTML = '<option value="all">Todos os Funcionários</option>';
-        employeesData.forEach(employee => {
-            const option = document.createElement('option');
-            option.value = employee.name;
-            option.textContent = employee.name;
-            datalist.appendChild(option);
-        });
+    const datalist = document.getElementById('employeeSuggestions');
+    datalist.innerHTML = '<option value="all">Todos os Funcionários</option>';
+
+    employeesData.forEach(employee => {
+        const option = document.createElement('option');
+        option.value = employee.name;
+        option.textContent = employee.name;
+        datalist.appendChild(option);
     });
 };
 
 const populateBranchFilter = () => {
-    const branchFilters = document.querySelectorAll('#branchFilter');
-    branchFilters.forEach(branchFilter => {
-        branchFilter.innerHTML = '<option value="all">Todas as Unidades</option>';
-        const uniqueBranches = [...new Set(employeesData.map(employee => employee.branch).filter(Boolean))];
-        uniqueBranches.forEach(branch => {
-            const option = document.createElement('option');
-            option.value = branch;
-            option.textContent = branch;
-            branchFilter.appendChild(option);
-        });
+    const branchFilter = document.getElementById('branchFilter');
+    branchFilter.innerHTML = '<option value="all">Todas as Unidades</option>';
+
+    const uniqueBranches = [...new Set(employeesData.map(employee => employee.branch).filter(Boolean))];
+    uniqueBranches.forEach(branch => {
+        const option = document.createElement('option');
+        option.value = branch;
+        option.textContent = branch;
+        branchFilter.appendChild(option);
     });
 };
 
@@ -341,8 +341,10 @@ const editEmployee = (index) => {
     document.querySelectorAll('input[name="hospitalized"]').forEach(radio => radio.checked = radio.value === employee.hospitalized);
     document.getElementById('hospitalizationReason').value = employee.hospitalizationReason || '';
     document.getElementById('lastCheckup').value = employee.lastCheckup || '';
+    // Limpar todas as caixas de seleção de histórico familiar
     document.querySelectorAll('input[name="familyHistory"]').forEach(checkbox => checkbox.checked = false);
     document.querySelectorAll('input[name^="family"][name$="Who"]').forEach(checkbox => checkbox.checked = false);
+    // Preencher caixas de seleção de histórico familiar
     if (employee.familyHistory) {
         Object.entries(employee.familyHistory).forEach(([condition, who]) => {
             const checkbox = document.querySelector(`input[name="familyHistory"][value="${condition}"]`);
@@ -401,6 +403,7 @@ const addNewEmployee = async () => {
     const hospitalized = document.querySelector('input[name="hospitalized"]:checked')?.value || 'Não';
     const hospitalizationReason = document.getElementById('hospitalizationReason').value || '';
     const lastCheckup = document.getElementById('lastCheckup').value || '';
+    // Coletar histórico familiar das caixas de seleção
     const familyHistoryCheckboxes = Array.from(document.querySelectorAll('input[name="familyHistory"]:checked'));
     const familyHistory = {};
     familyHistoryCheckboxes.forEach(checkbox => {
@@ -476,17 +479,8 @@ const exportToExcel = () => {
 
 const applyFilters = () => {
     console.log('Aplicando filtros');
-    const employeeInputs = document.querySelectorAll('#employeeFilter');
-    const branchSelects = document.querySelectorAll('#branchFilter');
-    let employeeName = 'all';
-    let selectedBranch = 'all';
-
-    employeeInputs.forEach(input => {
-        if (input.value) employeeName = input.value.toLowerCase();
-    });
-    branchSelects.forEach(select => {
-        if (select.value) selectedBranch = select.value;
-    });
+    const employeeName = employeeFilter.value.toLowerCase();
+    const selectedBranch = branchFilter.value;
 
     filteredData = employeesData.filter(employee => {
         const matchesName = employeeName === 'all' || employee.name.toLowerCase().includes(employeeName);
@@ -497,10 +491,6 @@ const applyFilters = () => {
     renderTable();
     renderSummaryCards();
     renderCharts();
-
-    // Sincronizar os filtros em ambas as abas
-    employeeInputs.forEach(input => input.value = employeeName === 'all' ? '' : employeeName);
-    branchSelects.forEach(select => select.value = selectedBranch);
 };
 
 const startAutoUpdate = () => {
@@ -532,13 +522,8 @@ const initApp = () => {
 
     exportBtn.addEventListener('click', exportToExcel);
 
-    // Adicionar eventos para todos os inputs de filtro
-    document.querySelectorAll('#employeeFilter').forEach(input => {
-        input.addEventListener('input', applyFilters);
-    });
-    document.querySelectorAll('#branchFilter').forEach(select => {
-        select.addEventListener('change', applyFilters);
-    });
+    employeeFilter.addEventListener('input', applyFilters);
+    branchFilter.addEventListener('change', applyFilters);
 
     confirmDeleteBtn.addEventListener('click', async () => {
         if (currentDeleteId !== null) {
