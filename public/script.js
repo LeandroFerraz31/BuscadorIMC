@@ -343,17 +343,15 @@ const editEmployee = (index) => {
     document.getElementById('hospitalizationReason').value = employee.hospitalizationReason || '';
     document.getElementById('lastCheckup').value = employee.lastCheckup || '';
     document.querySelectorAll('input[name="familyHistory"]').forEach(checkbox => checkbox.checked = false);
-    document.querySelectorAll('input[name^="family"][name$="Who"]').forEach(input => input.value = '');
-    if (employee.familyHistory) {
-        Object.entries(employee.familyHistory).forEach(([condition, who]) => {
-            const checkbox = document.querySelector(`input[name="familyHistory"][value="${condition}"]`);
-            if (checkbox) checkbox.checked = true;
-            const whoInput = document.querySelector(`input[name="family${condition}Who"]`);
-        if (whoInput && who && who.trim() !== '') {
-            whoInput.value = who;
-        }
-        });
-    }
+    document.querySelectorAll('select[name^="family"][name$="Who"]').forEach(select => select.value = '');
+if (employee.familyHistory) {
+    Object.entries(employee.familyHistory).forEach(([condition, who]) => {
+        const checkbox = document.querySelector(`input[name="familyHistory"][value="${condition}"]`);
+        if (checkbox) checkbox.checked = true;
+        const whoSelect = document.querySelector(`select[name="family${condition}Who"]`);
+        if (whoSelect) whoSelect.value = who || '';
+    });
+}
     document.getElementById('healthComplaint').value = employee.healthComplaint || '';
     document.getElementById('employeeId').value = employee.id;
     calculateIMC(); // Recalcular IMC ao carregar
@@ -401,12 +399,12 @@ const addNewEmployee = async () => {
     const hospitalizationReason = document.getElementById('hospitalizationReason').value || '';
     const lastCheckup = document.getElementById('lastCheckup').value || '';
     const familyHistoryCheckboxes = Array.from(document.querySelectorAll('input[name="familyHistory"]:checked'));
-    const familyHistory = {};
-    familyHistoryCheckboxes.forEach(checkbox => {
-        const condition = checkbox.value;
-        const whoInput = document.querySelector(`input[name="family${condition}Who"]`);
-        familyHistory[condition] = whoInput ? whoInput.value : '';
-    });
+const familyHistory = {};
+familyHistoryCheckboxes.forEach(checkbox => {
+    const condition = checkbox.value;
+    const whoSelect = document.querySelector(`select[name="family${condition}Who"]`);
+    familyHistory[condition] = whoSelect ? whoSelect.value : '';
+});
     const healthComplaint = document.getElementById('healthComplaint').value || '';
     const employeeId = document.getElementById('employeeId').value;
 
