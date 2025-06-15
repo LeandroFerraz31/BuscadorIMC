@@ -345,17 +345,31 @@ const editEmployee = (index) => {
     document.querySelectorAll('input[name="familyHistory"]').forEach(checkbox => checkbox.checked = false);
     document.querySelectorAll('input[name^="family"][name$="Who"]').forEach(checkbox => checkbox.checked = false);
     // Preencher caixas de seleção de histórico familiar
-    if (employee.familyHistory) {
+    console.log('Dados de familyHistory:', employee.familyHistory); // Log para depuração
+    if (employee.familyHistory && typeof employee.familyHistory === 'object') {
         Object.entries(employee.familyHistory).forEach(([condition, who]) => {
+            console.log(`Condição: ${condition}, Parentes:`, who); // Log para depuração
             const checkbox = document.querySelector(`input[name="familyHistory"][value="${condition}"]`);
-            if (checkbox) checkbox.checked = true;
+            if (checkbox) {
+                checkbox.checked = true;
+            } else {
+                console.warn(`Checkbox para condição ${condition} não encontrado`);
+            }
             if (Array.isArray(who)) {
                 who.forEach(value => {
                     const whoCheckbox = document.querySelector(`input[name="family${condition}Who"][value="${value}"]`);
-                    if (whoCheckbox) whoCheckbox.checked = true;
+                    if (whoCheckbox) {
+                        whoCheckbox.checked = true;
+                    } else {
+                        console.warn(`Checkbox para parente ${value} da condição ${condition} não encontrado`);
+                    }
                 });
+            } else {
+                console.warn(`Parentes para condição ${condition} não é um array:`, who);
             }
         });
+    } else {
+        console.warn('familyHistory não está definido ou não é um objeto:', employee.familyHistory);
     }
     document.getElementById('healthComplaint').value = employee.healthComplaint || '';
     document.getElementById('employeeId').value = employee.id;
@@ -411,6 +425,7 @@ const addNewEmployee = async () => {
         const who = Array.from(document.querySelectorAll(`input[name="family${condition}Who"]:checked`)).map(el => el.value);
         familyHistory[condition] = who.length > 0 ? who : [];
     });
+    console.log('Salvando familyHistory:', familyHistory); // Log para depuração
     const healthComplaint = document.getElementById('healthComplaint').value || '';
     const employeeId = document.getElementById('employeeId').value;
 
