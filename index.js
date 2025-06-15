@@ -85,7 +85,7 @@ app.get('/api/employees', (req, res) => {
             let parsedFamilyHistory = {};
             try {
                 parsedFamilyHistory = row.familyHistory ? JSON.parse(row.familyHistory) : {};
-                console.log(`Funcionário ID ${row.id} - familyHistory:`, parsedFamilyHistory); // Log para depuração
+                console.log(`Funcionário ID ${row.id} - familyHistory:`, parsedFamilyHistory);
             } catch (parseErr) {
                 console.error(`Erro ao parsear familyHistory para ID ${row.id}:`, parseErr.message);
             }
@@ -110,74 +110,119 @@ app.post('/api/employees', (req, res) => {
 
     // Validar familyHistory
     let familyHistoryJson = '{}';
-    if (familyHistory && typeof familyHistory === 'object') {
-        try {
-            familyHistoryJson = JSON.stringify(familyHistory);
-            console.log('familyHistory salvo:', familyHistoryJson); // Log para depuração
-        } catch (err) {
-            console.error('Erro ao serializar familyHistory:', err.message);
-            res.status(400).json({ error: 'Formato inválido para familyHistory' });
-            return;
+    if (familyHistory && typeof familyHistory === 'object' && !Array.isArray(familyHistory)) {
+        // Verificar se familyHistory tem chaves válidas e arrays
+        const isValid = Object.entries(familyHistory).every(([condition, who]) => 
+            typeof condition === 'string' && Array.isArray(who) && who.every(v => typeof v === 'string')
+        );
+        if (isValid) {
+            try {
+                familyHistoryJson = JSON.stringify(familyHistory);
+                console.log('familyHistory salvo:', familyHistoryJson);
+            } catch (err) {
+                console.error('Erro ao serializar familyHistory:', err.message);
+                res.status(400).json({ error: 'Formato inválido para familyHistory' });
+                return;
+            }
+        } else {
+            console.warn('familyHistory contém dados inválidos:', familyHistory);
+            if (id) {
+                // Para atualizações, manter o familyHistory existente se o novo for inválido
+                db.get(`SELECT familyHistory FROM employees WHERE id = ?`, [id], (err, row) => {
+                    if (err) {
+                        console.error('Erro ao buscar familyHistory existente:', err.message);
+                        res.status(500).json({ error: 'Erro ao validar dados' });
+                        return;
+                    }
+                    familyHistoryJson = row.familyHistory || '{}';
+                    console.log('Mantendo familyHistory existente:', familyHistoryJson);
+                    saveEmployee();
+                });
+                return;
+            } else {
+                console.warn('Usando familyHistory vazio para novo funcionário');
+            }
         }
     } else {
         console.warn('familyHistory inválido, usando {}:', familyHistory);
+        if (id) {
+            // Para atualizações, manter o familyHistory existente
+            db.get(`SELECT familyHistory FROM employees WHERE id = ?`, [id], (err, row) => {
+                if (err) {
+                    console.error('Erro ao buscar familyHistory existente:', err.message);
+                    res.status(500).json({ error: 'Erro ao validar dados' });
+                    return;
+                }
+                familyHistoryJson = row.familyHistory || '{}';
+                console.log('Mantendo familyHistory existente:', familyHistoryJson);
+                saveEmployee();
+            });
+            return;
+        }
     }
 
-    // Calcular IMC
-    const imc = height > 0 ? (weight / (height * height)).toFixed(1) : 0;
+    // Função para salvar o funcionário
+    const saveEmployee = () => {
+        // Calcular IMC
+        const imc = height > 0 ? (weight / (height * height)).toFixed(1) : 0;
+        const conditionsJson = JSON.stringify(conditions || []);
 
-    const conditionsJson = JSON.stringify(conditions || []);
-
-    if (id) {
-        // Atualizar funcionário existente
-        const stmt = db.prepare(`
-            UPDATE employees SET
-                name=?, age=?, weight=?, height=?, sector=?, branch=?, conditions=?,
-                medication=?, pcd=?, smoker=?, drinker=?, imc=?, fractured=?,
-                fracturedPart=?, hospitalized=?, hospitalizationReason=?, lastCheckup=?,
-                familyHistory=?, healthComplaint=?
-            WHERE id=?
-        `);
-        stmt.run(
-            name, age, weight, height, sector, branch, conditionsJson,
-            medication, pcd, smoker, drinker, imc, fractured,
-            fracturedPart, hospitalized, hospitalizationReason, lastCheckup,
-            familyHistoryJson, healthComplaint, id,
-            function(err) {
-                if (err) {
-                    console.error('Erro ao atualizar:', err.message);
-                    res.status(500).json({ error: 'Erro ao atualizar funcionário' });
-                    return;
+        if (id) {
+            // Atualizar funcionário existente
+            const stmt = db.prepare(`
+                UPDATE employees SET
+                    name=?, age=?, weight=?, height=?, sector=?, branch=?, conditions=?,
+                    medication=?, pcd=?, smoker=?, drinker=?, imc=?, fractured=?,
+                    fracturedPart=?, hospitalized=?, hospitalizationReason=?, lastCheckup=?,
+                    familyHistory=?, healthComplaint=?
+                WHERE id=?
+            `);
+            stmt.run(
+                name, age, weight, height, sector, branch, conditionsJson,
+                medication, pcd, smoker, drinker, imc, fractured,
+                fracturedPart, hospitalized, hospitalizationReason, lastCheckup,
+                familyHistoryJson, healthComplaint, id,
+                function(err) {
+                    if (err) {
+                        console.error('Erro ao atualizar:', err.message);
+                        res.status(500).json({ error: 'Erro ao atualizar funcionário' });
+                        return;
+                    }
+                    console.log('Funcionário atualizado, ID:', id);
+                    res.json({ message: 'Funcionário atualizado com sucesso' });
                 }
-                console.log('Funcionário atualizado, ID:', id);
-                res.json({ message: 'Funcionário atualizado com sucesso' });
-            }
-        );
-        stmt.finalize();
-    } else {
-        // Inserir novo funcionário
-        const stmt = db.prepare(`
-            INSERT INTO employees (
-                name, age, weight, height, sector, branch, conditions, medication,
+            );
+            stmt.finalize();
+        } else {
+            // Inserir novo funcionário
+            const stmt = db.prepare(`
+                INSERT INTO employees (
+                    name, age, weight, height, sector, branch, conditions, medication,
+                    pcd, smoker, drinker, imc, fractured, fracturedPart, hospitalized,
+                    hospitalizationReason, lastCheckup, familyHistory, healthComplaint
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `);
+            stmt.run(
+                name, age, weight, height, sector, branch, conditionsJson, medication,
                 pcd, smoker, drinker, imc, fractured, fracturedPart, hospitalized,
-                hospitalizationReason, lastCheckup, familyHistory, healthComplaint
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-        stmt.run(
-            name, age, weight, height, sector, branch, conditionsJson, medication,
-            pcd, smoker, drinker, imc, fractured, fracturedPart, hospitalized,
-            hospitalizationReason, lastCheckup, familyHistoryJson, healthComplaint,
-            function(err) {
-                if (err) {
-                    console.error('Erro ao inserir:', err.message);
-                    res.status(500).json({ error: 'Erro ao salvar funcionário' });
-                    return;
+                hospitalizationReason, lastCheckup, familyHistoryJson, healthComplaint,
+                function(err) {
+                    if (err) {
+                        console.error('Erro ao inserir:', err.message);
+                        res.status(500).json({ error: 'Erro ao salvar funcionário' });
+                        return;
+                    }
+                    console.log('Funcionário inserido, ID:', this.lastID);
+                    res.json({ message: 'Funcionário salvo com sucesso', id: this.lastID });
                 }
-                console.log('Funcionário inserido, ID:', this.lastID);
-                res.json({ message: 'Funcionário salvo com sucesso', id: this.lastID });
-            }
-        );
-        stmt.finalize();
+            );
+            stmt.finalize();
+        }
+    };
+
+    // Se não for uma atualização ou familyHistory for válido, salvar diretamente
+    if (!id || familyHistoryJson !== '{}') {
+        saveEmployee();
     }
 });
 
