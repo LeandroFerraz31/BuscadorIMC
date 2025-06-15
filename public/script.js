@@ -79,16 +79,32 @@ const countIndicators = () => {
     return counts;
 };
 
+// Função auxiliar para formatar histórico familiar para exibição
+const formatFamilyHistory = (familyHistory) => {
+    if (!familyHistory || typeof familyHistory !== 'object') {
+        return 'Nenhum';
+    }
+    
+    const formatted = Object.entries(familyHistory)
+        .filter(([condition, relatives]) => {
+            // Verifica se relatives é um array válido e não vazio
+            return Array.isArray(relatives) && relatives.length > 0;
+        })
+        .map(([condition, relatives]) => {
+            return `${condition}: ${relatives.join(', ')}`;
+        });
+    
+    return formatted.length > 0 ? formatted.join('; ') : 'Nenhum';
+};
+
 const renderTable = () => {
     console.log('Renderizando tabela com dados:', filteredData);
     const tbody = dataTable.querySelector('tbody');
     tbody.innerHTML = '';
 
     filteredData.forEach((employee, index) => {
-        const familyHistoryStr = Object.entries(employee.familyHistory || {})
-            .filter(([_, who]) => Array.isArray(who) && who.length > 0)
-            .map(([condition, who]) => `${condition}: ${who.join(', ')}`)
-            .join('; ') || 'Nenhum';
+        const familyHistoryStr = formatFamilyHistory(employee.familyHistory);
+        
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${employee.name || ''}</td>
@@ -315,20 +331,82 @@ const populateBranchFilter = () => {
     });
 };
 
+// Função corrigida para limpar todos os checkboxes do histórico familiar
+const clearFamilyHistoryCheckboxes = () => {
+    // Limpar checkboxes das condições
+    document.querySelectorAll('input[name="familyHistory"]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    // Limpar checkboxes dos parentes para todas as condições possíveis
+    const conditions = ['HAS', 'DM', 'Cardíaco', 'Asmático', 'CA', 'Ansiedade', 'Renal', 'Depressão', 'Trombose', 'Hérnia', 'Epilepsia', 'Tendinite', 'Psiquiátrico'];
+    conditions.forEach(condition => {
+        document.querySelectorAll(`input[name="family${condition}Who"]`).forEach(checkbox => {
+            checkbox.checked = false;
+        });
+    });
+};
+
+// Função corrigida para preencher o histórico familiar ao editar
+const populateFamilyHistory = (familyHistory) => {
+    console.log('Preenchendo histórico familiar:', familyHistory);
+    
+    // Primeiro limpar todos os checkboxes
+    clearFamilyHistoryCheckboxes();
+    
+    if (!familyHistory || typeof familyHistory !== 'object') {
+        console.log('Histórico familiar vazio ou inválido');
+        return;
+    }
+    
+    // Preencher os checkboxes baseado nos dados salvos
+    Object.entries(familyHistory).forEach(([condition, relatives]) => {
+        console.log(`Processando condição: ${condition}, parentes:`, relatives);
+        
+        // Marcar o checkbox da condição
+        const conditionCheckbox = document.querySelector(`input[name="familyHistory"][value="${condition}"]`);
+        if (conditionCheckbox) {
+            conditionCheckbox.checked = true;
+            console.log(`Checkbox da condição ${condition} marcado`);
+        } else {
+            console.warn(`Checkbox para condição ${condition} não encontrado`);
+        }
+        
+        // Marcar os checkboxes dos parentes se existirem
+        if (Array.isArray(relatives) && relatives.length > 0) {
+            relatives.forEach(relative => {
+                const relativeCheckbox = document.querySelector(`input[name="family${condition}Who"][value="${relative}"]`);
+                if (relativeCheckbox) {
+                    relativeCheckbox.checked = true;
+                    console.log(`Checkbox do parente ${relative} para ${condition} marcado`);
+                } else {
+                    console.warn(`Checkbox para parente ${relative} da condição ${condition} não encontrado`);
+                }
+            });
+        }
+    });
+};
+
 const editEmployee = (index) => {
     console.log('Editando funcionário no índice:', index);
     const employee = filteredData[index];
+    
+    // Preencher campos básicos
     document.getElementById('name').value = employee.name || '';
     document.getElementById('age').value = employee.age || '';
     document.getElementById('weight').value = employee.weight || '';
     document.getElementById('height').value = employee.height || '';
     document.getElementById('sector').value = employee.sector || '';
     document.getElementById('branch').value = employee.branch || '';
+    
+    // Preencher condições de saúde
     document.querySelectorAll('input[name="condition"]').forEach(checkbox => checkbox.checked = false);
     (employee.conditions || []).forEach(condition => {
         const checkbox = document.querySelector(`input[name="condition"][value="${condition}"]`);
         if (checkbox) checkbox.checked = true;
     });
+    
+    // Preencher outros campos
     document.getElementById('medication').value = employee.medication || '';
     document.getElementById('pcd').value = employee.pcd || 'Não';
     document.querySelectorAll('input[name="smoker"]').forEach(radio => radio.checked = radio.value === (employee.smoker || 'Não'));
@@ -339,22 +417,13 @@ const editEmployee = (index) => {
     document.querySelectorAll('input[name="hospitalized"]').forEach(radio => radio.checked = radio.value === (employee.hospitalized || 'Não'));
     document.getElementById('hospitalizationReason').value = employee.hospitalizationReason || '';
     document.getElementById('lastCheckup').value = employee.lastCheckup || '';
-    document.querySelectorAll('input[name="familyHistory"]').forEach(checkbox => checkbox.checked = false);
-    document.querySelectorAll('input[name^="family"][name$="Who"]').forEach(checkbox => checkbox.checked = false);
-    if (employee.familyHistory && typeof employee.familyHistory === 'object') {
-        Object.entries(employee.familyHistory).forEach(([condition, who]) => {
-            const conditionCheckbox = document.querySelector(`input[name="familyHistory"][value="${condition}"]`);
-            if (conditionCheckbox) conditionCheckbox.checked = true;
-            if (Array.isArray(who)) {
-                who.forEach(value => {
-                    const whoCheckbox = document.querySelector(`input[name="family${condition}Who"][value="${value}"]`);
-                    if (whoCheckbox) whoCheckbox.checked = true;
-                });
-            }
-        });
-    }
+    
+    // Preencher histórico familiar usando a função corrigida
+    populateFamilyHistory(employee.familyHistory);
+    
     document.getElementById('healthComplaint').value = employee.healthComplaint || '';
     document.getElementById('employeeId').value = employee.id || '';
+    
     calculateIMC();
     modal.style.display = 'block';
 };
@@ -381,6 +450,26 @@ const deleteEmployee = async (index) => {
     }
 };
 
+// Função corrigida para coletar dados do histórico familiar
+const collectFamilyHistory = () => {
+    const familyHistoryCheckboxes = Array.from(document.querySelectorAll('input[name="familyHistory"]:checked'));
+    const familyHistory = {};
+    
+    familyHistoryCheckboxes.forEach(checkbox => {
+        const condition = checkbox.value;
+        const relativeCheckboxes = Array.from(document.querySelectorAll(`input[name="family${condition}Who"]:checked`));
+        const relatives = relativeCheckboxes.map(cb => cb.value);
+        
+        // Só adicionar se houver parentes marcados
+        if (relatives.length > 0) {
+            familyHistory[condition] = relatives;
+        }
+    });
+    
+    console.log('Histórico familiar coletado:', familyHistory);
+    return familyHistory;
+};
+
 const addNewEmployee = async () => {
     const name = document.getElementById('name').value.trim();
     const age = parseInt(document.getElementById('age').value) || null;
@@ -399,13 +488,10 @@ const addNewEmployee = async () => {
     const hospitalized = document.querySelector('input[name="hospitalized"]:checked')?.value || 'Não';
     const hospitalizationReason = document.getElementById('hospitalizationReason').value.trim() || '';
     const lastCheckup = document.getElementById('lastCheckup').value.trim() || '';
-    const familyHistoryCheckboxes = Array.from(document.querySelectorAll('input[name="familyHistory"]:checked'));
-    const familyHistory = {};
-    familyHistoryCheckboxes.forEach(checkbox => {
-        const condition = checkbox.value;
-        const who = Array.from(document.querySelectorAll(`input[name="family${condition}Who"]:checked`)).map(el => el.value) || [];
-        familyHistory[condition] = who.length > 0 ? who : [];
-    });
+    
+    // Usar a função corrigida para coletar histórico familiar
+    const familyHistory = collectFamilyHistory();
+    
     const healthComplaint = document.getElementById('healthComplaint').value.trim() || '';
     const employeeId = document.getElementById('employeeId').value;
 
@@ -459,10 +545,7 @@ const exportToExcel = () => {
         Internado: employee.hospitalized,
         'Motivo Internação': employee.hospitalizationReason || 'N/A',
         'Último Check-up': employee.lastCheckup || 'N/A',
-        'Histórico Familiar': Object.entries(employee.familyHistory || {})
-            .filter(([_, who]) => Array.isArray(who) && who.length > 0)
-            .map(([condition, who]) => `${condition}: ${who.join(', ')}`)
-            .join('; ') || 'Nenhum',
+        'Histórico Familiar': formatFamilyHistory(employee.familyHistory),
         'Queixa de Saúde': employee.healthComplaint || 'Nenhuma'
     }));
 
@@ -503,6 +586,7 @@ const initApp = () => {
         employeeForm.reset();
         document.getElementById('employeeId').value = '';
         document.getElementById('imc').value = '';
+        clearFamilyHistoryCheckboxes(); // Limpar histórico familiar ao abrir novo funcionário
         modal.style.display = 'block';
     });
 
