@@ -450,7 +450,6 @@ const deleteEmployee = async (index) => {
     }
 };
 
-// Função corrigida para coletar dados do histórico familiar
 const collectFamilyHistory = () => {
     const familyHistoryCheckboxes = Array.from(document.querySelectorAll('input[name="familyHistory"]:checked'));
     const familyHistory = {};
