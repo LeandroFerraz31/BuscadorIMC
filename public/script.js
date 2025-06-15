@@ -7,7 +7,6 @@ console.log('API_BASE_URL definido como:', API_BASE_URL);
 
 let employeesData = [];
 let filteredData = [];
-// ... resto do código ...
 
 const dataTable = document.getElementById('dataTable');
 const addDataBtn = document.getElementById('addDataBtn');
@@ -89,9 +88,9 @@ const renderTable = () => {
 
     filteredData.forEach((employee, index) => {
         const familyHistoryStr = Object.entries(employee.familyHistory || {})
-            .filter(([condition, who]) => who)
-            .map(([condition, who]) => `${condition}: ${who}`)
-            .join(', ');
+            .filter(([condition, who]) => Array.isArray(who) && who.length > 0)
+            .map(([condition, who]) => `${condition}: ${who.join(', ')}`)
+            .join('; ');
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${employee.name}</td>
@@ -343,18 +342,25 @@ const editEmployee = (index) => {
     document.getElementById('hospitalizationReason').value = employee.hospitalizationReason || '';
     document.getElementById('lastCheckup').value = employee.lastCheckup || '';
     document.querySelectorAll('input[name="familyHistory"]').forEach(checkbox => checkbox.checked = false);
-    document.querySelectorAll('select[name^="family"][name$="Who"]').forEach(select => select.value = '');
-if (employee.familyHistory) {
-    Object.entries(employee.familyHistory).forEach(([condition, who]) => {
-        const checkbox = document.querySelector(`input[name="familyHistory"][value="${condition}"]`);
-        if (checkbox) checkbox.checked = true;
-        const whoSelect = document.querySelector(`select[name="family${condition}Who"]`);
-        if (whoSelect) whoSelect.value = who || '';
+    document.querySelectorAll('select[name^="family"][name$="Who"]').forEach(select => {
+        Array.from(select.options).forEach(option => option.selected = false);
     });
-}
+    if (employee.familyHistory) {
+        Object.entries(employee.familyHistory).forEach(([condition, who]) => {
+            const checkbox = document.querySelector(`input[name="familyHistory"][value="${condition}"]`);
+            if (checkbox) checkbox.checked = true;
+            const whoSelect = document.querySelector(`select[name="family${condition}Who"]`);
+            if (whoSelect && Array.isArray(who)) {
+                who.forEach(value => {
+                    const option = Array.from(whoSelect.options).find(opt => opt.value === value);
+                    if (option) option.selected = true;
+                });
+            }
+        });
+    }
     document.getElementById('healthComplaint').value = employee.healthComplaint || '';
     document.getElementById('employeeId').value = employee.id;
-    calculateIMC(); // Recalcular IMC ao carregar
+    calculateIMC();
     modal.style.display = 'block';
 };
 
@@ -399,12 +405,14 @@ const addNewEmployee = async () => {
     const hospitalizationReason = document.getElementById('hospitalizationReason').value || '';
     const lastCheckup = document.getElementById('lastCheckup').value || '';
     const familyHistoryCheckboxes = Array.from(document.querySelectorAll('input[name="familyHistory"]:checked'));
-const familyHistory = {};
-familyHistoryCheckboxes.forEach(checkbox => {
-    const condition = checkbox.value;
-    const whoSelect = document.querySelector(`select[name="family${condition}Who"]`);
-    familyHistory[condition] = whoSelect ? whoSelect.value : '';
-});
+    const familyHistory = {};
+    familyHistoryCheckboxes.forEach(checkbox => {
+        const condition = checkbox.value;
+        const whoSelect = document.querySelector(`select[name="family${condition}Who"]`);
+        familyHistory[condition] = whoSelect ? Array.from(whoSelect.selectedOptions)
+            .map(option => option.value)
+            .filter(value => value !== 'Nenhum') : [];
+    });
     const healthComplaint = document.getElementById('healthComplaint').value || '';
     const employeeId = document.getElementById('employeeId').value;
 
@@ -459,16 +467,16 @@ const exportToExcel = () => {
         'Motivo Internação': employee.hospitalizationReason || 'N/A',
         'Último Check-up': employee.lastCheckup || 'N/A',
         'Histórico Familiar': Object.entries(employee.familyHistory || {})
-            .filter(([condition, who]) => who)
-            .map(([condition, who]) => `${condition}: ${who}`)
-            .join(', ') || 'Nenhum',
+            .filter(([condition, who]) => Array.isArray(who) && who.length > 0)
+            .map(([condition, who]) => `${condition}: ${who.join(', ')}`)
+            .join('; ') || 'Nenhum',
         'Queixa de Saúde': employee.healthComplaint || 'Nenhuma'
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Funcionários');
-    XLSX.writeFile(workbook, 'funcionarios_saude.xlsx'); // Corrigido para writeFile
+    XLSX.writeFile(workbook, 'funcionarios_saude.xlsx');
 };
 
 const applyFilters = () => {
