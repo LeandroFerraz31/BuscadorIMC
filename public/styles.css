@@ -502,6 +502,16 @@ footer {
     font-size: 0.9rem;
 }
 
+select[multiple] {
+    width: 150px;
+    height: 100px;
+    margin-left: 10px;
+    vertical-align: top;
+}
+.checkbox-group label {
+    display: inline-block;
+    margin-right: 10px;
+}
 /* Media Queries para Responsividade */
 @media (max-width: 1024px) {
     .summary-cards {
