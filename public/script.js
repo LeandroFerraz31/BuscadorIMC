@@ -1,9 +1,4 @@
-const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:80'
-    : '';
-
-console.log('Hostname:', window.location.hostname);
-console.log('API_BASE_URL definido como:', API_BASE_URL);
+const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:80' : '';
 
 let employeesData = [];
 let filteredData = [];
@@ -21,7 +16,6 @@ const employeeFilter = document.getElementById('employeeFilter');
 const branchFilter = document.getElementById('branchFilter');
 let currentDeleteId = null;
 
-// Função para calcular o IMC
 const calculateIMC = () => {
     const weight = parseFloat(document.getElementById('weight').value) || 0;
     const height = parseFloat(document.getElementById('height').value) || 0;
@@ -29,26 +23,22 @@ const calculateIMC = () => {
     document.getElementById('imc').value = imc;
 };
 
-// Adicionar listeners para peso e altura
 document.getElementById('weight').addEventListener('input', calculateIMC);
 document.getElementById('height').addEventListener('input', calculateIMC);
 
 async function fetchEmployees() {
     try {
         const url = `${API_BASE_URL}/api/employees`;
-        console.log('Buscando funcionários em', url);
         const response = await fetch(url);
         if (!response.ok) throw new Error(`Erro na requisição: ${response.status}`);
         employeesData = await response.json();
         filteredData = [...employeesData];
-        console.log('Funcionários carregados:', employeesData);
         renderTable();
         renderSummaryCards();
         renderCharts();
         populateEmployeeSuggestions();
         populateBranchFilter();
     } catch (error) {
-        console.error('Erro ao buscar funcionários:', error);
         alert('Não foi possível carregar os dados. Certifique-se de que o servidor está rodando.');
     }
 }
@@ -82,7 +72,6 @@ const countIndicators = () => {
 };
 
 const renderTable = () => {
-    console.log('Renderizando tabela com dados:', filteredData);
     const tbody = dataTable.querySelector('tbody');
     tbody.innerHTML = '';
 
@@ -121,15 +110,11 @@ const renderTable = () => {
     });
 
     document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            editEmployee(this.getAttribute('data-index'));
-        });
+        btn.addEventListener('click', () => editEmployee(btn.getAttribute('data-index')));
     });
 
     document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            showDeleteConfirmation(this.getAttribute('data-index'));
-        });
+        btn.addEventListener('click', () => showDeleteConfirmation(btn.getAttribute('data-index')));
     });
 };
 
@@ -286,7 +271,6 @@ const renderHabitsChart = () => {
 };
 
 const renderCharts = () => {
-    console.log('Renderizando gráficos');
     renderHealthConditionsChart();
     renderImcChart();
     renderHabitsChart();
@@ -317,8 +301,7 @@ const populateBranchFilter = () => {
     });
 };
 
-const editEmployee = (index) => {
-    console.log('Editando funcionário no índice:', index);
+const editEmployee = index => {
     const employee = filteredData[index];
     document.getElementById('name').value = employee.name;
     document.getElementById('age').value = employee.age || '';
@@ -341,35 +324,19 @@ const editEmployee = (index) => {
     document.querySelectorAll('input[name="hospitalized"]').forEach(radio => radio.checked = radio.value === employee.hospitalized);
     document.getElementById('hospitalizationReason').value = employee.hospitalizationReason || '';
     document.getElementById('lastCheckup').value = employee.lastCheckup || '';
-    // Limpar todas as caixas de seleção de histórico familiar
     document.querySelectorAll('input[name="familyHistory"]').forEach(checkbox => checkbox.checked = false);
     document.querySelectorAll('input[name^="family"][name$="Who"]').forEach(checkbox => checkbox.checked = false);
-    // Preencher caixas de seleção de histórico familiar
-    console.log('Dados de familyHistory:', employee.familyHistory);
     if (employee.familyHistory && typeof employee.familyHistory === 'object' && !Array.isArray(employee.familyHistory)) {
         Object.entries(employee.familyHistory).forEach(([condition, who]) => {
-            console.log(`Condição: ${condition}, Parentes:`, who);
             const conditionCheckbox = document.querySelector(`input[name="familyHistory"][value="${condition}"]`);
-            if (conditionCheckbox) {
-                conditionCheckbox.checked = true;
-            } else {
-                console.warn(`Checkbox para condição ${condition} não encontrado`);
-            }
-            if (Array.isArray(who) && who.length > 0) {
+            if (conditionCheckbox) conditionCheckbox.checked = true;
+            if (Array.isArray(who)) {
                 who.forEach(value => {
                     const whoCheckbox = document.querySelector(`input[name="family${condition}Who"][value="${value}"]`);
-                    if (whoCheckbox) {
-                        whoCheckbox.checked = true;
-                    } else {
-                        console.warn(`Checkbox para parente ${value} da condição ${condition} não encontrado`);
-                    }
+                    if (whoCheckbox) whoCheckbox.checked = true;
                 });
-            } else {
-                console.warn(`Parentes para condição ${condition} não é um array válido:`, who);
             }
         });
-    } else {
-        console.warn('familyHistory não está definido, não é um objeto ou é um array:', employee.familyHistory);
     }
     document.getElementById('healthComplaint').value = employee.healthComplaint || '';
     document.getElementById('employeeId').value = employee.id;
@@ -377,16 +344,14 @@ const editEmployee = (index) => {
     modal.style.display = 'block';
 };
 
-const showDeleteConfirmation = (index) => {
-    console.log('Mostrando confirmação de exclusão para índice:', index);
+const showDeleteConfirmation = index => {
     currentDeleteId = index;
     deleteModal.style.display = 'block';
 };
 
-const deleteEmployee = async (index) => {
+const deleteEmployee = async index => {
     const employee = filteredData[index];
     try {
-        console.log('Excluindo funcionário com ID:', employee.id);
         const response = await fetch(`${API_BASE_URL}/api/employees/${employee.id}`, {
             method: 'DELETE'
         });
@@ -394,7 +359,6 @@ const deleteEmployee = async (index) => {
         await fetchEmployees();
         deleteModal.style.display = 'none';
     } catch (error) {
-        console.error('Erro ao excluir:', error);
         alert('Erro ao excluir funcionário.');
     }
 };
@@ -417,15 +381,13 @@ const addNewEmployee = async () => {
     const hospitalized = document.querySelector('input[name="hospitalized"]:checked')?.value || 'Não';
     const hospitalizationReason = document.getElementById('hospitalizationReason').value || '';
     const lastCheckup = document.getElementById('lastCheckup').value || '';
-    // Coletar histórico familiar das caixas de seleção
     const familyHistoryCheckboxes = Array.from(document.querySelectorAll('input[name="familyHistory"]:checked'));
     const familyHistory = {};
     familyHistoryCheckboxes.forEach(checkbox => {
         const condition = checkbox.value;
         const who = Array.from(document.querySelectorAll(`input[name="family${condition}Who"]:checked`)).map(el => el.value);
-        familyHistory[condition] = who.length > 0 ? who : [];
+        familyHistory[condition] = who;
     });
-    console.log('Salvando familyHistory:', familyHistory);
     const healthComplaint = document.getElementById('healthComplaint').value || '';
     const employeeId = document.getElementById('employeeId').value;
 
@@ -442,7 +404,6 @@ const addNewEmployee = async () => {
 
     try {
         const url = `${API_BASE_URL}/api/employees`;
-        console.log('Enviando dados para', url, 'com:', newEmployee);
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -454,13 +415,11 @@ const addNewEmployee = async () => {
         document.getElementById('employeeId').value = '';
         await fetchEmployees();
     } catch (error) {
-        console.error('Erro ao adicionar:', error);
         alert('Erro ao salvar funcionário.');
     }
 };
 
 const exportToExcel = () => {
-    console.log('Exportando dados para Excel');
     const worksheetData = filteredData.map(employee => ({
         Nome: employee.name,
         Idade: employee.age,
@@ -493,7 +452,6 @@ const exportToExcel = () => {
 };
 
 const applyFilters = () => {
-    console.log('Aplicando filtros');
     const employeeName = employeeFilter.value.toLowerCase();
     const selectedBranch = branchFilter.value;
 
@@ -509,28 +467,26 @@ const applyFilters = () => {
 };
 
 const startAutoUpdate = () => {
-    console.log('Iniciando atualização automática');
     setInterval(fetchEmployees, 60000);
 };
 
 const initApp = () => {
-    console.log('Inicializando aplicativo');
     fetchEmployees();
     startAutoUpdate();
     calculateIMC();
 
-    addDataBtn.addEventListener('click', function() {
+    addDataBtn.addEventListener('click', () => {
         employeeForm.reset();
         document.getElementById('employeeId').value = '';
         document.getElementById('imc').value = '';
         modal.style.display = 'block';
     });
 
-    closeBtn.addEventListener('click', function() {
+    closeBtn.addEventListener('click', () => {
         modal.style.display = 'none';
     });
 
-    employeeForm.addEventListener('submit', async function(e) {
+    employeeForm.addEventListener('submit', async e => {
         e.preventDefault();
         await addNewEmployee();
     });
@@ -538,19 +494,18 @@ const initApp = () => {
     exportBtn.addEventListener('click', exportToExcel);
 
     employeeFilter.addEventListener('input', applyFilters);
-    branchFilter.addEventListener('change', function() {
-        applyFilters);
-    });
+    branchFilter.addEventListener('change', applyFilters);
 
-    confirmDeleteBtn.addEventListener('click', async function() {
+    confirmDeleteBtn.addEventListener('click', async () => {
         if (currentDeleteId !== null) {
-            await deleteEmployee();
+            await deleteEmployee(currentDeleteId);
             currentDeleteId = null;
         }
     });
 
-    cancelDeleteBtn.addEventListener('click', function() {
+    cancelDeleteBtn.addEventListener('click', () => {
         deleteModal.style.display = 'none';
+        currentDeleteId = null;
     });
 
     document.getElementById('applyHealthFilter').addEventListener('click', renderHealthConditionsChart);
@@ -558,14 +513,13 @@ const initApp = () => {
     document.getElementById('applyHabitsFilter').addEventListener('click', renderHabitsChart);
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            this.classList.add('active');
-            document.getElementById(`${this.getAttribute('data-tab')}-content`).classList.add('active');
+            btn.classList.add('active');
+            document.getElementById(`${btn.getAttribute('data-tab')}-content`).classList.add('active');
         });
     });
-};
 };
 
 window.onload = initApp;
