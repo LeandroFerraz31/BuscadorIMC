@@ -23,10 +23,10 @@
         </div>
 
         <div id="dashboard-content" class="tab-content active">
-            <div class="filters-section">
+            <section class="filters-section">
                 <div class="filter-container">
                     <label for="employeeFilter">Funcionário:</label>
-                    <input list="employeeSuggestions" id="employeeFilter" placeholder="Digite o nome">
+                    <input type="text" id="employeeFilter" list="employeeSuggestions" placeholder="Digite o nome do funcionário">
                     <datalist id="employeeSuggestions">
                         <option value="all">Todos os Funcionários</option>
                     </datalist>
@@ -37,7 +37,7 @@
                         <option value="all">Todas as Unidades</option>
                     </select>
                 </div>
-            </div>
+            </section>
 
             <div class="summary-cards">
                 <div class="card" id="totalEmployees">
@@ -113,6 +113,22 @@
         </div>
 
         <div id="details-content" class="tab-content">
+            <section class="filters-section">
+                <div class="filter-container">
+                    <label for="employeeFilter">Funcionário:</label>
+                    <input type="text" id="employeeFilter" list="employeeSuggestions" placeholder="Digite o nome do funcionário">
+                    <datalist id="employeeSuggestions">
+                        <option value="all">Todos os Funcionários</option>
+                    </datalist>
+                </div>
+                <div class="filter-container">
+                    <label for="branchFilter">Unidade/Filial:</label>
+                    <select id="branchFilter">
+                        <option value="all">Todas as Unidades</option>
+                    </select>
+                </div>
+            </section>
+
             <div class="data-table-section">
                 <h2>Dados Detalhados</h2>
                 <div class="table-container">
